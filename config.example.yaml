@@ -1,0 +1,27 @@
+# Operational config. Copy to config.yaml (gitignored) and edit for your setup.
+# The loader prefers config.yaml and falls back to this example.
+
+ingest:
+  window_hours: 24
+
+# Feed sources are added in Slice 2. Each: {id, name, type: rss|json, url, topics: [...]}.
+sources: []
+
+weather:
+  provider: open-meteo      # no API key required
+  latitude: 0.0
+  longitude: 0.0
+
+spotify:
+  show_id: "spotify:show:REPLACE_ME"
+
+episode:
+  target_duration_minutes: 20
+
+voices:
+  ARIA: en-US-AriaNeural
+  ANDREW: en-US-AndrewNeural
+
+render:
+  rate: "+12%"
+  gap_seconds: 0.35

@@ -12,6 +12,17 @@ cover.png
 # Python
 __pycache__/
 *.pyc
+.venv/
+*.egg-info/
+.pytest_cache/
+
+# Personal config (ship the .example versions instead)
+config.yaml
+profile.yaml
+.env
+
+# Local SQLite store
+*.db
 
 # macOS
 .DS_Store
