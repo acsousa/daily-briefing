@@ -32,14 +32,17 @@ class LLM:
 
     def complete(self, system: str, user: str, *, model: str | None = None,
                  max_tokens: int = 16000) -> str:
-        """Return the text of a single completion (adaptive thinking)."""
+        """Return the text of a single completion.
+
+        Thinking is left off here: this is a writing task (render a brief into dialogue),
+        not a reasoning one — and on Opus, thinking tokens would otherwise consume the
+        max_tokens budget and truncate longer segments.
+        """
         resp = self.client.messages.create(
             model=model or self.default_model,
             max_tokens=max_tokens,
             system=system,
             messages=[{"role": "user", "content": user}],
-            thinking={"type": "adaptive"},
-            output_config={"effort": self.effort},
         )
         return "".join(b.text for b in resp.content if b.type == "text").strip()
 

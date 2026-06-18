@@ -54,7 +54,8 @@ def _words_for(seconds: int) -> int:
 
 
 def _max_tokens(words: int) -> int:
-    return max(int(words * 2.2), 300)
+    # generous headroom so a segment never truncates mid-sentence (~1.4 tokens/word)
+    return max(int(words * 3), 1200)
 
 
 def write_script(llm, plan, editor_output, clusters_by_id, articles_by_id,
