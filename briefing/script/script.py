@@ -9,18 +9,23 @@ from datetime import date
 
 from ..store import EpisodeSegment, SourceAttribution
 
-_SYSTEM = """You write a two-host audio briefing. AVA anchors (leads, frames, reads the
-through-line); ANDREW is the analyst (connects, questions, the occasional dry aside).
+_SYSTEM = """You write a two-host audio briefing in the style of Marketplace (Kai Ryssdal):
+conversational business journalism, not finance-bro analysis. AVA anchors (leads, frames,
+reads the through-line); ANDREW is the analyst (connects, questions, the occasional dry aside).
 
 Output ONLY dialogue lines, each starting with `AVA:` or `ANDREW:` — one speaker per line,
 alternating naturally. No stage directions, no markdown, no headers.
 
-What makes it good (read carefully):
-- Lead with WHAT HAPPENED and WHY IT MATTERS — the substance of the story, its stakes, the
-  people and decisions involved. That is the spine of every segment.
+Voice (read carefully):
+- Translate the news into EVERYDAY CONSEQUENCES — what it means for real decisions and lives
+  (who hires, who buys, who waits), not abstract metrics. Keep the core fact/number visible
+  but lose the jargon. Assume a smart listener with no finance background.
+- Open a story by surfacing its TENSION or CONTRADICTION, then explain the hidden mechanism
+  underneath ("X looks strong, but here's what's really going on"). That hook is the spine.
+- Tone: wry, lightly skeptical, warm — never finance-bro, never judgmental of people. A
+  familiar phrase with a twist is welcome, used sparingly and never forced.
 - Market reaction is a passing NOTE, not the focus. Do NOT roll through tickers and
-  percentages. If a price move matters, mention it in one short clause and move on. Never
-  let a segment become a list of stock moves.
+  percentages. If a price move matters, one short clause, then move on.
 - Begin each story with a brief, natural verbal hand-off from the previous topic (one line).
 - Keep fact separate from analysis; frame forward-looking questions as open questions, never
   as sourced fact. Invent nothing — every claim traces to the provided sources.
@@ -73,9 +78,11 @@ def write_script(llm, plan, editor_output, clusters_by_id, articles_by_id,
     for seg in plan.segments:
         words = _words_for(seg.allotted_sec)
         if seg.kind == "intro":
-            user = (f"Tone: {tone}\nWrite a {words}-word two-host open for {pretty_date}. "
+            user = (f"Tone: {tone}\nWrite a {words}-word two-host cold open for {pretty_date}. "
+                    "Marketplace-style: open on a tension or contradiction (or a striking, "
+                    "plain-language framing), then promise to explain what's underneath. "
                     f"Set up the day's through-line: \"{editor_output.through_line}\". "
-                    "Warm, brief, no fabricated details.")
+                    "Warm, brisk, no fabricated details.")
             script, attrs, brk = llm.complete(_SYSTEM, user, model=model, max_tokens=_max_tokens(words)), [], False
         elif seg.kind == "weather" and weather:
             user = (f"Tone: {tone}\nWrite at most 2 short lines of two-host weather for "
@@ -85,7 +92,9 @@ def write_script(llm, plan, editor_output, clusters_by_id, articles_by_id,
                     "Use only these numbers.")
             script, attrs, brk = llm.complete(_SYSTEM, user, model=model, max_tokens=_max_tokens(words)), [], False
         elif seg.kind == "outro":
-            user = f"Tone: {tone}\nWrite a short {words}-word two-host sign-off. No new facts."
+            user = (f"Tone: {tone}\nWrite a short {words}-word two-host sign-off, Marketplace-"
+                    "style: concise, a touch wry, reinforcing that every story had an economic "
+                    "or strategic angle. No new facts.")
             script, attrs, brk = llm.complete(_SYSTEM, user, model=model, max_tokens=_max_tokens(words)), [], True
         else:  # headline
             c = clusters_by_id[seg.story_cluster_id]
