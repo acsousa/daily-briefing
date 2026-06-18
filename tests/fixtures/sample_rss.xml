@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Test Feed</title>
+    <link>https://ex.com</link>
+    <description>Fixture feed</description>
+    <item>
+      <title>AI chip breakthrough from Nvidia</title>
+      <link>https://ex.com/a?utm_source=rss&amp;id=5</link>
+      <description>&lt;p&gt;A new AI chip from Nvidia ships today.&lt;/p&gt;</description>
+      <pubDate>Wed, 17 Jun 2026 10:00:00 GMT</pubDate>
+      <author>jane@ex.com</author>
+    </item>
+    <item>
+      <title>MBTA announces new Boston schedule</title>
+      <link>https://ex.com/b</link>
+      <description>Local transit update for Massachusetts riders.</description>
+      <pubDate>Wed, 17 Jun 2026 09:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Celebrity gossip roundup</title>
+      <link>https://ex.com/c</link>
+      <description>The latest entertainment and celebrity news.</description>
+      <pubDate>Wed, 17 Jun 2026 08:00:00 GMT</pubDate>
+    </item>
+  </channel>
+</rss>

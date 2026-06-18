@@ -1,0 +1,21 @@
+{
+  "version": "https://jsonfeed.org/version/1.1",
+  "title": "JSON Test Feed",
+  "items": [
+    {
+      "id": "1",
+      "url": "https://js.com/x",
+      "title": "Robotics startup raises a round",
+      "content_text": "A humanoid robotics startup raised new funding.",
+      "date_published": "2026-06-17T11:00:00Z",
+      "author": {"name": "John Doe"}
+    },
+    {
+      "id": "2",
+      "url": "https://js.com/y",
+      "title": "Sports recap from last night",
+      "content_text": "Final scores from last night's games.",
+      "date_published": "2026-06-17T07:00:00Z"
+    }
+  ]
+}
