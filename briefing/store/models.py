@@ -37,6 +37,20 @@ class StoryCluster(BaseModel):
     score_components: dict = Field(default_factory=dict)
 
 
+class StoryThread(BaseModel):
+    """A recurring story tracked across episodes (continuity)."""
+    id: str
+    title: str
+    topic: str
+    status: str = "new"              # new | developing | dormant
+    first_briefed: date
+    last_briefed: date
+    article_ids: list[str] = Field(default_factory=list)
+    cluster_ids: list[str] = Field(default_factory=list)
+    summary_so_far: str = ""
+    times_briefed: int = 0
+
+
 class PlannedSegment(BaseModel):
     kind: str                        # intro | weather | headline | deep_dive | day_ahead | outro
     story_cluster_id: str | None = None

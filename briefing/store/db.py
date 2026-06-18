@@ -14,6 +14,7 @@ from .models import (
     InteractionContext,
     RawArticle,
     StoryCluster,
+    StoryThread,
 )
 
 # model -> (table, {column: (sql_type, extractor)})
@@ -25,6 +26,11 @@ _SPECS = {
     }),
     StoryCluster: ("story_clusters", {
         "last_updated": ("TEXT", lambda o: o.last_updated.isoformat()),
+    }),
+    StoryThread: ("story_threads", {
+        "topic": ("TEXT", lambda o: o.topic),
+        "status": ("TEXT", lambda o: o.status),
+        "last_briefed": ("TEXT", lambda o: o.last_briefed.isoformat()),
     }),
     EpisodePlan: ("episode_plans", {
         "date": ("TEXT", lambda o: o.date.isoformat()),

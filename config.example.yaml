@@ -63,6 +63,24 @@ spotify:
 episode:
   target_duration_minutes: 20
 
+# Cross-episode continuity windows (days). Threads briefed within recent_days with no
+# new developments are down-weighted; the editor recaps developing stories within month_days.
+continuity:
+  recent_days: 1
+  week_days: 7
+  month_days: 30
+
+# Cluster ranking weights (need not sum to 1; normalized implicitly by comparison).
+ranking:
+  weights: { freshness: 0.30, importance: 0.25, interest: 0.30, novelty: 0.15 }
+
+# LLM stages. Editor uses the stronger model; everything else the default.
+# Auth: ANTHROPIC_API_KEY (env or .env). See docs.
+llm:
+  default_model: claude-sonnet-4-6
+  editor_model: claude-opus-4-8
+  effort: high
+
 voices:
   ARIA: en-US-AriaNeural
   ANDREW: en-US-AndrewNeural

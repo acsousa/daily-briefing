@@ -1,0 +1,56 @@
+"""Thin Anthropic client wrapper.
+
+Editor stage uses the stronger model; other stages use the default. Auth resolves
+from ANTHROPIC_API_KEY (env or a gitignored .env). The client is created lazily, so
+importing this module never requires a key — only an actual call does.
+"""
+from __future__ import annotations
+
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+load_dotenv(REPO_ROOT / ".env")  # no-op if absent
+
+
+class LLM:
+    def __init__(self, config: dict):
+        cfg = config.get("llm", {})
+        self.default_model = cfg.get("default_model", "claude-sonnet-4-6")
+        self.editor_model = cfg.get("editor_model", self.default_model)
+        self.effort = cfg.get("effort", "high")
+        self._client = None
+
+    @property
+    def client(self):
+        if self._client is None:
+            import anthropic
+            self._client = anthropic.Anthropic()   # reads ANTHROPIC_API_KEY
+        return self._client
+
+    def complete(self, system: str, user: str, *, model: str | None = None,
+                 max_tokens: int = 16000) -> str:
+        """Return the text of a single completion (adaptive thinking)."""
+        resp = self.client.messages.create(
+            model=model or self.default_model,
+            max_tokens=max_tokens,
+            system=system,
+            messages=[{"role": "user", "content": user}],
+            thinking={"type": "adaptive"},
+            output_config={"effort": self.effort},
+        )
+        return "".join(b.text for b in resp.content if b.type == "text").strip()
+
+    def parse(self, system: str, user: str, schema, *, model: str | None = None,
+              max_tokens: int = 16000):
+        """Return a validated instance of `schema` (a pydantic model)."""
+        resp = self.client.messages.parse(
+            model=model or self.default_model,
+            max_tokens=max_tokens,
+            system=system,
+            messages=[{"role": "user", "content": user}],
+            output_format=schema,
+            thinking={"type": "adaptive"},
+        )
+        return resp.parsed_output
