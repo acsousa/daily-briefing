@@ -64,7 +64,7 @@ python3 render_briefing.py      # writes briefings/briefing-YYYY-MM-DD.mp3
 ## Roadmap
 
 The current pipeline is the v0 spine. The plan
-([`docs/IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md)) extends it toward an
+([`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md)) extends it toward an
 interactive personal audio briefing, one independently shippable slice at a time.
 Guiding bet: **precompute the episode offline; make only the interaction layer live.**
 
