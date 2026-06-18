@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SIGNAL — Daily Briefing Config</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;background:#0c100f;background-image:radial-gradient(60% 50% at 50% 0%,#11201b 0%,#0c100f 70%);
+       font-family:'Space Grotesk',sans-serif;display:flex;justify-content:center;padding:48px 24px;}
+  ::placeholder{color:#46544e}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+  @keyframes scanmove{from{transform:translateY(-160px)}to{transform:translateY(1100px)}}
+  @keyframes spinslow{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+  .lbl{font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.18em;color:#5f7269;margin-bottom:9px;}
+  input.txt{width:100%;background:rgba(7,13,12,0.7);border:1px solid rgba(52,211,153,0.18);border-radius:3px;
+            padding:12px 14px;color:#dcefe6;font:500 15px 'Space Grotesk';outline:none;}
+  input.mono{font:500 13px 'IBM Plex Mono',monospace;padding:10px 14px;}
+  input.txt:focus{border-color:#34d399;box-shadow:0 0 0 2px rgba(52,211,153,0.14)}
+  input.avoidf:focus{border-color:#e07a7a;box-shadow:0 0 0 2px rgba(224,122,122,0.14)}
+  .opt{position:relative;overflow:hidden;cursor:pointer;border-radius:3px;background:rgba(255,255,255,0.012);transition:border-color .15s}
+  .opt .fill{position:absolute;inset:0;opacity:0}
+  .opt.sel .fill{opacity:1}
+  .chipx{cursor:pointer;opacity:.75}
+  .chipx:hover{opacity:1}
+  button#save{border:none;cursor:pointer;padding:14px 28px;border-radius:4px;background:linear-gradient(120deg,#1db954,#34d399);
+              color:#04140d;font:700 14px 'Space Grotesk';letter-spacing:.06em;box-shadow:0 0 28px rgba(52,211,153,0.45);
+              display:flex;align-items:center;gap:9px;transition:box-shadow .2s,transform .2s}
+  button#save:hover{box-shadow:0 0 42px rgba(52,211,153,0.8);transform:translateY(-1px)}
+  input[type=range].tone{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;margin:0}
+</style>
+</head>
+<body>
+<div style="width:1180px;max-width:100%;position:relative;overflow:hidden;border-radius:10px;border:1px solid rgba(52,211,153,0.16);background:linear-gradient(180deg,#060d0e,#04080a);box-shadow:0 36px 90px rgba(0,0,0,0.6);">
+  <canvas id="amb" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:.7;"></canvas>
+  <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(52,211,153,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(52,211,153,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;"></div>
+  <div style="position:absolute;left:0;right:0;top:0;height:160px;background:linear-gradient(180deg,transparent,rgba(52,211,153,0.06),transparent);animation:scanmove 8s linear infinite;pointer-events:none;"></div>
+
+  <div style="position:relative;">
+    <!-- header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 30px;border-bottom:1px solid rgba(52,211,153,0.14);">
+      <div style="display:flex;align-items:baseline;gap:13px;">
+        <span style="font:700 20px 'Space Grotesk';letter-spacing:.14em;color:#eafff6;">SIGNAL</span>
+        <span style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.22em;color:#3fae8c;">//DAILY.CAST</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:9px;font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.16em;color:#34d399;"><span style="width:7px;height:7px;border-radius:50%;background:#34d399;box-shadow:0 0 10px #34d399;animation:blink 2s infinite;"></span>ONLINE · CONFIGURING FEED</div>
+    </div>
+
+    <!-- orb hero -->
+    <div style="display:flex;flex-direction:column;align-items:center;padding:26px 0 18px;border-bottom:1px solid rgba(52,211,153,0.1);">
+      <div style="position:relative;width:230px;height:230px;display:flex;align-items:center;justify-content:center;">
+        <div style="position:absolute;width:218px;height:218px;border-radius:50%;background:conic-gradient(from 0deg, rgba(52,211,153,0) 0%, rgba(52,211,153,0.4) 18%, rgba(34,211,238,0.32) 42%, rgba(167,139,250,0.32) 66%, rgba(251,191,36,0.28) 84%, rgba(52,211,153,0) 100%);-webkit-mask:radial-gradient(circle, transparent 60%, #000 61%, #000 63%, transparent 64%);mask:radial-gradient(circle, transparent 60%, #000 61%, #000 63%, transparent 64%);animation:spinslow 18s linear infinite;"></div>
+        <canvas id="orb" style="position:relative;width:230px;height:230px;"></canvas>
+      </div>
+      <div style="font:600 38px 'Space Grotesk';letter-spacing:.18em;color:#eafff6;margin-top:2px;text-shadow:0 0 30px rgba(52,211,153,0.4);">SIGNAL</div>
+      <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.34em;color:#3fae8c;margin-top:7px;">YOUR DAILY INTELLIGENCE BRIEFING</div>
+    </div>
+
+    <!-- body -->
+    <div style="display:grid;grid-template-columns:276px 1fr;">
+      <!-- left readout -->
+      <div style="padding:26px 24px;border-right:1px solid rgba(52,211,153,0.12);background:rgba(6,12,11,0.4);">
+        <div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.2em;color:#54655e;margin-bottom:18px;">┌ LIVE READOUT</div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div><div style="font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.18em;color:#54655e;">LISTENER</div><div id="r-name" style="font:600 16px 'Space Grotesk';color:#dcefe6;margin-top:3px;">—</div></div>
+          <div><div style="font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.18em;color:#54655e;">VECTORS</div><div id="r-vec" style="font:600 16px 'Space Grotesk';color:#34d399;margin-top:3px;">0 ACTIVE</div></div>
+          <div style="display:flex;gap:18px;">
+            <div><div style="font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.18em;color:#54655e;">LENGTH</div><div id="r-len" style="font:600 16px 'Space Grotesk';color:#a78bfa;margin-top:3px;">10m</div></div>
+            <div><div style="font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.18em;color:#54655e;">DROP</div><div id="r-drop" style="font:600 16px 'Space Grotesk';color:#fbbf24;margin-top:3px;">8:00 AM</div></div>
+          </div>
+          <div><div style="font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.18em;color:#54655e;">VOICE</div><div id="r-voice" style="font:600 16px 'Space Grotesk';letter-spacing:.06em;color:#22d3ee;margin-top:3px;">AVA</div></div>
+          <div><div style="font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.18em;color:#54655e;">TONE</div><div id="r-tone" style="font:600 16px 'Space Grotesk';color:#fbbf24;margin-top:3px;">BALANCED</div></div>
+        </div>
+        <div style="margin-top:26px;height:1px;background:rgba(52,211,153,0.12);"></div>
+        <div style="margin-top:18px;font:400 11px 'IBM Plex Mono',monospace;line-height:1.7;color:#46544e;">SYS: feed compiles<br/>nightly at 03:00.<br/>est. render &lt; 90s.</div>
+      </div>
+
+      <!-- right fields -->
+      <div style="padding:26px 30px;display:flex;flex-direction:column;gap:24px;">
+        <div>
+          <div class="lbl">┌─ IDENTIFY ──────</div>
+          <input id="name" class="txt" placeholder="Listener name"/>
+        </div>
+
+        <div>
+          <div class="lbl">┌─ INTEREST VECTORS ──────</div>
+          <div id="topic-chips" style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px;"></div>
+          <input id="topic-input" class="txt mono" placeholder="&gt; add vector + Enter" style="margin-bottom:11px;"/>
+          <div id="topic-suggest" style="display:flex;flex-wrap:wrap;gap:7px;"></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+          <div>
+            <div class="lbl">┌─ LENGTH ──</div>
+            <div id="lengths" style="display:flex;gap:6px;"></div>
+          </div>
+          <div>
+            <div class="lbl">┌─ DROP TIME ──</div>
+            <div id="times" style="display:flex;gap:6px;"></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="lbl">┌─ HOST VOICE ──────</div>
+          <div id="voices" style="display:grid;grid-template-columns:1fr 1fr;gap:7px;"></div>
+        </div>
+
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
+            <div class="lbl" style="margin:0;">┌─ TONE ──────</div>
+            <div id="tone-label" style="font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.16em;color:#fbbf24;">BALANCED</div>
+          </div>
+          <div style="position:relative;height:34px;">
+            <div style="position:absolute;top:50%;left:0;right:0;height:3px;transform:translateY(-50%);background:rgba(52,211,153,0.12);"></div>
+            <div id="tone-fill" style="position:absolute;top:50%;left:0;height:3px;transform:translateY(-50%);background:linear-gradient(90deg,#34d399,#fbbf24);box-shadow:0 0 12px rgba(251,191,36,0.5);width:35%;"></div>
+            <div id="tone-thumb" style="position:absolute;top:50%;transform:translate(-50%,-50%);width:14px;height:14px;border-radius:2px;background:#06120e;border:2px solid #fbbf24;box-shadow:0 0 14px rgba(251,191,36,0.8);left:35%;"></div>
+            <input id="tone" class="tone" type="range" min="0" max="100" value="35"/>
+          </div>
+          <div style="display:flex;justify-content:space-between;font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.14em;color:#54655e;"><span>SERIOUS</span><span>PLAYFUL</span></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+          <div>
+            <div class="lbl">┌─ FAVOR ──</div>
+            <input id="favor-input" class="txt mono" style="padding:9px 13px;" placeholder="&gt; add + Enter"/>
+            <div id="favor-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;"></div>
+          </div>
+          <div>
+            <div class="lbl">┌─ AVOID ──</div>
+            <input id="avoid-input" class="txt mono avoidf" style="padding:9px 13px;border-color:rgba(224,122,122,0.22);" placeholder="&gt; add + Enter"/>
+            <div id="avoid-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- footer -->
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:20px;padding:20px 30px;border-top:1px solid rgba(52,211,153,0.14);background:rgba(6,12,11,0.5);">
+      <div id="status" style="display:none;align-items:center;gap:9px;font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.14em;color:#34d399;"><span style="width:7px;height:7px;border-radius:50%;background:#34d399;box-shadow:0 0 10px #34d399;animation:blink 1.4s infinite;"></span><span id="status-text">CONFIG SAVED · WRITTEN TO PROFILE.YAML</span></div>
+      <button id="save" style="margin-left:auto;">▶ SAVE CONFIG</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const LENGTHS = [{label:'5',val:'5'},{label:'10',val:'10'},{label:'20',val:'20'},{label:'30',val:'30'}];
+const TIMES = [{label:'Dawn',sub:'6:00 AM',val:'06:00'},{label:'Commute',sub:'8:00 AM',val:'08:00'},{label:'Midday',sub:'12:00 PM',val:'12:00'},{label:'Evening',sub:'7:00 PM',val:'19:00'}];
+let SUGGEST = ['technology','defense','robotics','business','science','health','world','politics','sports','entertainment','local'];
+let VOICES = [{id:'en-US-AvaNeural',name:'AVA',desc:'Expressive'},{id:'en-US-AriaNeural',name:'ARIA',desc:'Crisp & neutral'},{id:'en-US-JennyNeural',name:'JENNY',desc:'Warm'},{id:'en-US-MichelleNeural',name:'MICHELLE',desc:'Friendly'}];
+
+const state = {name:'',topics:['technology','business'],length:'10',time:'08:00',voice:'en-US-AvaNeural',tone:35,favor:[],avoid:[]};
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function toneLabel(t){ return t<33?'ANALYTICAL':t<66?'BALANCED':'PLAYFUL'; }
+function nearestLength(v){ const n=+v; let best=LENGTHS[0].val,d=1e9; for(const l of LENGTHS){const dd=Math.abs(+l.val-n); if(dd<d){d=dd;best=l.val;}} return best; }
+function timeDisplay(v){ const t=TIMES.find(x=>x.val===v); return t?t.sub:v; }
+function voiceName(id){ const v=VOICES.find(x=>x.id===id); return v?v.name:(id||'').replace(/^en-US-|Neural$/g,''); }
+
+function tag(text, kind, idx){
+  const col = kind==='avoid' ? '224,122,122' : '52,211,153';
+  const textCol = kind==='avoid' ? '#f0cccc' : (kind==='topic'?'#c8f7e6':'#bdf2df');
+  const pad = kind==='topic' ? '6px 8px 6px 11px' : '4px 7px 4px 10px';
+  const fs = kind==='topic' ? '12px' : '11px';
+  return `<span style="display:inline-flex;align-items:center;gap:7px;padding:${pad};border-radius:3px;background:rgba(${col},0.12);border:1px solid rgba(${col},0.4);color:${textCol};font:500 ${fs} 'IBM Plex Mono',monospace;">${esc(text)}<b class="chipx" data-kind="${kind}" data-i="${idx}">×</b></span>`;
+}
+
+function render(){
+  $('name').value = state.name;
+  $('r-name').textContent = state.name || '—';
+  $('r-vec').textContent = state.topics.length + ' ACTIVE';
+  $('r-len').textContent = state.length + 'm';
+  $('r-drop').textContent = timeDisplay(state.time);
+  $('r-voice').textContent = voiceName(state.voice);
+  $('r-tone').textContent = toneLabel(state.tone);
+
+  $('topic-chips').innerHTML = state.topics.map((t,i)=>tag(t,'topic',i)).join('');
+  $('topic-suggest').innerHTML = SUGGEST.map(l=>{
+    const sel = state.topics.includes(l);
+    return `<div class="opt${sel?' sel':''}" data-act="topic" data-val="${esc(l)}" style="padding:7px 12px;border:1px solid rgba(52,211,153,${sel?0.4:0.16});color:${sel?'#cdeede':'#9fb3ab'};font:500 12px 'IBM Plex Mono',monospace;"><span class="fill" style="background:rgba(52,211,153,0.2);box-shadow:inset 0 0 0 1px #34d399;"></span><span style="position:relative;z-index:1;">${esc(l)}</span></div>`;
+  }).join('');
+
+  $('lengths').innerHTML = LENGTHS.map(l=>{
+    const sel = state.length===l.val;
+    return `<div class="opt${sel?' sel':''}" data-act="length" data-val="${l.val}" style="flex:1;text-align:center;padding:10px 2px;border:1px solid rgba(167,139,250,${sel?0.45:0.18});"><span class="fill" style="background:rgba(167,139,250,0.2);box-shadow:inset 0 0 0 1px #a78bfa;"></span><div style="position:relative;z-index:1;font:600 17px 'Space Grotesk';color:#eee9ff;">${l.label}</div></div>`;
+  }).join('');
+
+  $('times').innerHTML = TIMES.map(t=>{
+    const sel = state.time===t.val;
+    return `<div class="opt${sel?' sel':''}" data-act="time" data-val="${t.val}" style="flex:1;text-align:center;padding:7px 1px;border:1px solid rgba(251,191,36,${sel?0.45:0.18});"><span class="fill" style="background:rgba(251,191,36,0.18);box-shadow:inset 0 0 0 1px #fbbf24;"></span><div style="position:relative;z-index:1;font:600 13px 'Space Grotesk';color:#fff4d6;">${t.label}</div><div style="position:relative;z-index:1;font:500 11px 'IBM Plex Mono',monospace;color:#7d9088;margin-top:2px;">${t.sub}</div></div>`;
+  }).join('');
+
+  $('voices').innerHTML = VOICES.map(v=>{
+    const sel = state.voice===v.id;
+    return `<div class="opt${sel?' sel':''}" data-act="voice" data-val="${esc(v.id)}" style="display:flex;align-items:center;justify-content:space-between;padding:11px 13px;border:1px solid rgba(34,211,238,${sel?0.45:0.18});"><span class="fill" style="background:rgba(34,211,238,0.16);box-shadow:inset 0 0 0 1px #22d3ee;"></span><span style="position:relative;z-index:1;"><span style="font:600 14px 'Space Grotesk';letter-spacing:.06em;color:#dff8fc;">${esc(v.name)}</span><span style="display:block;font:400 10px 'IBM Plex Mono',monospace;color:#6f827b;">${esc(v.desc)}</span></span></div>`;
+  }).join('');
+
+  $('tone').value = state.tone;
+  $('tone-fill').style.width = state.tone + '%';
+  $('tone-thumb').style.left = state.tone + '%';
+  $('tone-label').textContent = toneLabel(state.tone);
+
+  $('favor-chips').innerHTML = state.favor.map((t,i)=>tag(t,'favor',i)).join('');
+  $('avoid-chips').innerHTML = state.avoid.map((t,i)=>tag(t,'avoid',i)).join('');
+}
+
+// events
+document.addEventListener('click', e=>{
+  const opt = e.target.closest('.opt');
+  if(opt){
+    const act = opt.dataset.act, val = opt.dataset.val;
+    if(act==='topic') state.topics = state.topics.includes(val) ? state.topics.filter(x=>x!==val) : [...state.topics,val];
+    else if(act==='length') state.length = val;
+    else if(act==='time') state.time = val;
+    else if(act==='voice') state.voice = val;
+    render(); return;
+  }
+  const x = e.target.closest('.chipx');
+  if(x){
+    const kind=x.dataset.kind, i=+x.dataset.i;
+    if(kind==='topic') state.topics = state.topics.filter((_,j)=>j!==i);
+    else if(kind==='favor') state.favor = state.favor.filter((_,j)=>j!==i);
+    else if(kind==='avoid') state.avoid = state.avoid.filter((_,j)=>j!==i);
+    render();
+  }
+});
+$('name').addEventListener('input', e=>{ state.name=e.target.value; $('r-name').textContent=state.name||'—'; });
+$('tone').addEventListener('input', e=>{ state.tone=+e.target.value; render(); });
+function tagInput(inputId, key){
+  $(inputId).addEventListener('keydown', e=>{
+    if(e.key!=='Enter') return; e.preventDefault();
+    const v=(e.target.value||'').trim();
+    if(v && !state[key].includes(v)) state[key]=[...state[key],v];
+    e.target.value=''; render();
+  });
+}
+tagInput('topic-input','topics'); tagInput('favor-input','favor'); tagInput('avoid-input','avoid');
+
+$('save').addEventListener('click', async ()=>{
+  const btn=$('save'); btn.textContent='▶ SAVING…';
+  try{
+    const r = await fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(state)});
+    const j = await r.json();
+    if(!r.ok || j.error) throw new Error(j.error||('HTTP '+r.status));
+    $('status').style.display='flex'; $('status-text').textContent='CONFIG SAVED · WRITTEN TO PROFILE.YAML + CONFIG.YAML';
+    btn.textContent='▶ SAVED';
+  }catch(err){
+    $('status').style.display='flex'; $('status').style.color='#e07a7a';
+    $('status-text').textContent='SAVE FAILED · '+err.message;
+    btn.textContent='▶ SAVE CONFIG';
+  }
+});
+
+// load catalogs + current config
+async function load(){
+  try{ const m = await (await fetch('/api/meta')).json(); if(m.suggested) SUGGEST=m.suggested; if(m.voices) VOICES=m.voices; }catch{}
+  try{
+    const c = await (await fetch('/api/config')).json();
+    Object.assign(state, {
+      name:c.name||'', topics:c.topics||[], length:nearestLength(c.length||'10'),
+      time:c.time||'08:00', voice:c.voice||VOICES[0].id, tone:+c.tone||35,
+      favor:c.favor||[], avoid:c.avoid||[]
+    });
+  }catch{}
+  render();
+}
+load();
+
+// ---- canvas animations (ported from the design reference) ----
+function sizeCanvas(c){
+  const r=c.getBoundingClientRect(); if(!r.width||!r.height) return null;
+  const dpr=Math.min(window.devicePixelRatio||1,2), w=Math.round(r.width*dpr), h=Math.round(r.height*dpr);
+  if(c.width!==w||c.height!==h){ c.width=w; c.height=h; }
+  const ctx=c.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); return {ctx,w:r.width,h:r.height};
+}
+function drawAmbient(c,t){
+  const d=sizeCanvas(c); if(!d) return; const {ctx,w,h}=d; ctx.clearRect(0,0,w,h);
+  if(!c.__p) c.__p=Array.from({length:50},()=>({x:Math.random()*w,y:Math.random()*h,s:0.12+Math.random()*0.5,r:0.6+Math.random()*1.6,ph:Math.random()*6,hue:Math.random()}));
+  const gx=w*0.5+Math.cos(t*0.3)*w*0.22, gy=h*0.32+Math.sin(t*0.25)*h*0.18;
+  const g=ctx.createRadialGradient(gx,gy,0,gx,gy,w*0.5); g.addColorStop(0,'rgba(16,185,129,0.05)'); g.addColorStop(1,'rgba(16,185,129,0)');
+  ctx.fillStyle=g; ctx.fillRect(0,0,w,h);
+  const cols=['110,231,216','34,211,238','167,139,250'];
+  for(const p of c.__p){ p.y-=p.s; if(p.y<-4) p.y=h+4; const a=Math.max(0,0.22+Math.sin(t*1.5+p.ph)*0.18);
+    ctx.beginPath(); ctx.fillStyle='rgba('+cols[(p.hue*3)|0]+','+a+')'; ctx.arc(p.x,p.y,p.r,0,7); ctx.fill(); }
+}
+function drawOrb(c,t){
+  const d=sizeCanvas(c); if(!d) return; const {ctx,w,h}=d; ctx.clearRect(0,0,w,h);
+  const cx=w/2, cy=h/2;
+  const core=ctx.createRadialGradient(cx,cy,0,cx,cy,w*0.46);
+  core.addColorStop(0,'rgba(52,211,153,0.22)'); core.addColorStop(0.5,'rgba(16,185,129,0.07)'); core.addColorStop(1,'rgba(6,16,13,0)');
+  ctx.fillStyle=core; ctx.fillRect(0,0,w,h);
+  const rc=['52,211,153','34,211,238','167,139,250'];
+  for(let i=0;i<3;i++){ const rr=w*0.22+i*w*0.075; ctx.save(); ctx.translate(cx,cy); ctx.rotate(t*(0.2+i*0.15)*(i%2?-1:1));
+    ctx.beginPath(); for(let k=0;k<4;k++){ ctx.arc(0,0,rr,k*Math.PI/2+0.2,k*Math.PI/2+Math.PI/2-0.2); ctx.moveTo(rr*Math.cos((k+1)*Math.PI/2+0.2),rr*Math.sin((k+1)*Math.PI/2+0.2)); }
+    ctx.strokeStyle='rgba('+rc[i]+','+(0.55-i*0.1)+')'; ctx.lineWidth=1.5; ctx.stroke(); ctx.restore(); }
+  const N=22; for(let i=0;i<N;i++){ const ang=t*0.5+i*(6.2832/N), rad=w*0.40+Math.sin(t*2+i)*4, x=cx+Math.cos(ang)*rad, y=cy+Math.sin(ang)*rad*0.96, col=rc[i%3];
+    ctx.beginPath(); ctx.fillStyle='rgba('+col+','+(0.4+0.5*Math.abs(Math.sin(t+i)))+')'; ctx.shadowColor='rgb('+col+')'; ctx.shadowBlur=8; ctx.arc(x,y,1.7,0,7); ctx.fill(); }
+  ctx.shadowBlur=0;
+  const sr=(t*30)%(w*0.46), sa=1-sr/(w*0.46);
+  ctx.beginPath(); ctx.strokeStyle='rgba(34,211,238,'+(sa*0.35)+')'; ctx.lineWidth=1; ctx.arc(cx,cy,sr,0,7); ctx.stroke();
+  const ir=w*0.085+Math.sin(t*2)*w*0.012, ig=ctx.createRadialGradient(cx,cy,0,cx,cy,ir);
+  ig.addColorStop(0,'#d7fff0'); ig.addColorStop(0.5,'#34d399'); ig.addColorStop(1,'rgba(16,185,129,0.1)');
+  ctx.fillStyle=ig; ctx.beginPath(); ctx.arc(cx,cy,ir,0,7); ctx.fill();
+}
+(function loop(){ const tick=now=>{ const t=now/1000; drawAmbient($('amb'),t); drawOrb($('orb'),t); requestAnimationFrame(tick); }; requestAnimationFrame(tick); })();
+</script>
+</body>
+</html>

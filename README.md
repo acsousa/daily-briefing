@@ -71,6 +71,17 @@ The editor and scriptwriter stages call the Claude API, so set `ANTHROPIC_API_KE
 gitignored `.env` (or your shell). `--dry-run` needs no key. Models are configured under
 `llm:` in `config.yaml` (editor → Opus, scripting → Sonnet by default).
 
+### Configure preferences (SIGNAL web UI)
+
+```sh
+brief config            # opens a local page at http://127.0.0.1:8765
+```
+
+A single-screen "SIGNAL" control panel (name, interest vectors, length, drop time, host
+voice, tone, favor/avoid). Saving **patches** your `profile.yaml` / `config.yaml` — it
+updates only the fields it owns and preserves the rest (sources, llm, weather). Served by a
+dependency-free stdlib HTTP server; no build step.
+
 ### Hand-written briefing (still supported)
 
 Edit `briefings/briefing.txt` directly (keep the `AVA:` / `ANDREW:` tags), then:

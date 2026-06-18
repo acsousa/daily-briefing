@@ -143,6 +143,11 @@ def cmd_generate(args) -> None:
     print("next: ./make_briefing.sh  (renders + uploads)")
 
 
+def cmd_config(args) -> None:
+    from .web import serve
+    serve(port=args.port, open_browser=not args.no_browser)
+
+
 def main(argv=None) -> None:
     parser = argparse.ArgumentParser(prog="brief")
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -158,6 +163,11 @@ def main(argv=None) -> None:
     pg.add_argument("--dry-run", action="store_true",
                     help="run through planning only; no LLM calls or files")
     pg.set_defaults(func=cmd_generate)
+
+    pc = sub.add_parser("config", help="open the SIGNAL web UI to edit profile.yaml/config.yaml")
+    pc.add_argument("--port", type=int, default=8765)
+    pc.add_argument("--no-browser", action="store_true")
+    pc.set_defaults(func=cmd_config)
 
     args = parser.parse_args(argv)
     args.func(args)
