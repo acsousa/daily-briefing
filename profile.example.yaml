@@ -1,17 +1,23 @@
 # Personal interests & style. Copy to profile.yaml (gitignored) and make it yours.
 # Feeds ranking (topic weights + keywords) and scripting (style + host personas).
-# The loader prefers profile.yaml and falls back to this generic example.
+# With no profile.yaml, this generic example is used.
+#
+# `topic` values use the shared taxonomy that sources are tagged with:
+#   technology defense robotics business science health world politics sports
+#   entertainment local
+# Ingestion keeps an article if its source topics intersect your active topics
+# (weight > 0) OR an interest keyword appears in it, and drops anything matching `avoid`.
 
 owner:
   name: Your Name
   location: { city: "", state: "", timezone: America/New_York }
 
-# weight 0-1 steers ranking; keywords help match articles to topics
 interests:
   - { topic: technology, weight: 1.0, keywords: [AI, software, hardware] }
   - { topic: business,   weight: 0.8, keywords: [markets, economy, earnings] }
+  - { topic: science,    weight: 0.6, keywords: [space, research] }
   - { topic: world,      weight: 0.6, keywords: [] }
-  - { topic: science,    weight: 0.4, keywords: [space, research] }
+  - { topic: health,     weight: 0.4, keywords: [] }
 
 must_cover: []                       # topics to always include if anything qualifies
 avoid: []                            # topics/keywords to de-prioritize or skip

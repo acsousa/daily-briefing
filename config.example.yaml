@@ -1,11 +1,57 @@
-# Operational config. Copy to config.yaml (gitignored) and edit for your setup.
-# The loader prefers config.yaml and falls back to this example.
+# Operational config. Copy to config.yaml (gitignored) and override what you need.
+# Personal config.yaml is merged ON TOP of this file: top-level keys override, and
+# `sources` are appended (deduped by id) so you inherit this broad catalog and just
+# add your own (e.g. local) feeds. With no config.yaml, this example is used as-is.
 
 ingest:
   window_hours: 24
 
-# Feed sources are added in Slice 2. Each: {id, name, type: rss|json, url, topics: [...]}.
-sources: []
+# Broad, multi-topic catalog. Ingestion fetches all of these, then keeps only
+# articles relevant to the active user profile (see profile.yaml). Each source is
+# tagged with one or more canonical topics:
+#   technology defense robotics business science health world politics sports
+#   entertainment local
+# URLs are best-effort and validated at ingest time; prune any that 404.
+sources:
+  # --- technology ---
+  - { id: arstechnica,    name: Ars Technica,     type: rss, url: "http://feeds.arstechnica.com/arstechnica/index", topics: [technology] }
+  - { id: theverge,       name: The Verge,        type: rss, url: "https://www.theverge.com/rss/index.xml",        topics: [technology] }
+  - { id: techcrunch,     name: TechCrunch,       type: rss, url: "https://techcrunch.com/feed/",                  topics: [technology] }
+  - { id: hackernews,     name: Hacker News,      type: rss, url: "https://hnrss.org/frontpage",                   topics: [technology] }
+  # --- defense / national security ---
+  - { id: warontherocks,  name: War on the Rocks, type: rss, url: "https://warontherocks.com/feed/",               topics: [defense] }
+  - { id: breakingdefense,name: Breaking Defense, type: rss, url: "https://breakingdefense.com/feed/",             topics: [defense] }
+  - { id: defensescoop,   name: DefenseScoop,     type: rss, url: "https://defensescoop.com/feed/",                topics: [defense] }
+  - { id: thewarzone,     name: The War Zone,     type: rss, url: "https://www.twz.com/feed",                      topics: [defense] }
+  # --- robotics ---
+  - { id: ieee_robotics,  name: IEEE Spectrum Robotics, type: rss, url: "https://spectrum.ieee.org/feeds/topic/robotics.rss", topics: [robotics, technology] }
+  - { id: robotreport,    name: The Robot Report, type: rss, url: "https://www.therobotreport.com/feed/",          topics: [robotics] }
+  # --- business / economy / finance ---
+  - { id: marketwatch,    name: MarketWatch,      type: rss, url: "http://feeds.marketwatch.com/marketwatch/topstories/", topics: [business] }
+  - { id: cnbc_finance,   name: CNBC Finance,     type: rss, url: "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=10000664", topics: [business] }
+  - { id: marketplace,    name: Marketplace,      type: rss, url: "https://www.marketplace.org/feed/",             topics: [business] }
+  # --- science ---
+  - { id: quanta,         name: Quanta Magazine,  type: rss, url: "https://api.quantamagazine.org/feed/",          topics: [science] }
+  - { id: sciencenews,    name: Science News,     type: rss, url: "https://www.sciencenews.org/feed",             topics: [science] }
+  - { id: nasa,           name: NASA,             type: rss, url: "https://www.nasa.gov/news-release/feed/",       topics: [science] }
+  # --- health ---
+  - { id: statnews,       name: STAT News,        type: rss, url: "https://www.statnews.com/feed/",                topics: [health] }
+  - { id: npr_health,     name: NPR Health,       type: rss, url: "https://feeds.npr.org/1128/rss.xml",            topics: [health] }
+  # --- world ---
+  - { id: bbc_world,      name: BBC World,        type: rss, url: "http://feeds.bbci.co.uk/news/world/rss.xml",    topics: [world] }
+  - { id: npr_news,       name: NPR News,         type: rss, url: "https://feeds.npr.org/1001/rss.xml",            topics: [world] }
+  - { id: aljazeera,      name: Al Jazeera,       type: rss, url: "https://www.aljazeera.com/xml/rss/all.xml",     topics: [world] }
+  # --- politics ---
+  - { id: thehill,        name: The Hill,         type: rss, url: "https://thehill.com/news/feed/",                topics: [politics] }
+  - { id: politico,       name: Politico,         type: rss, url: "https://www.politico.com/rss/politicopicks.xml",topics: [politics] }
+  - { id: npr_politics,   name: NPR Politics,     type: rss, url: "https://feeds.npr.org/1014/rss.xml",            topics: [politics] }
+  # --- sports ---
+  - { id: espn,           name: ESPN,             type: rss, url: "https://www.espn.com/espn/rss/news",            topics: [sports] }
+  - { id: bbc_sport,      name: BBC Sport,        type: rss, url: "http://feeds.bbci.co.uk/sport/rss.xml",         topics: [sports] }
+  # --- entertainment / culture / celebrity ---
+  - { id: variety,        name: Variety,          type: rss, url: "https://variety.com/feed/",                     topics: [entertainment] }
+  - { id: ew,             name: Entertainment Weekly, type: rss, url: "https://ew.com/feed/",                      topics: [entertainment] }
+  # --- local --- add your own metro feeds in config.yaml; none shipped by default.
 
 weather:
   provider: open-meteo      # no API key required
