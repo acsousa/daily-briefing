@@ -21,7 +21,7 @@ hand-written sample script. See [the roadmap](#roadmap) for where it's headed.
 ├── render_briefing.py          # two-voice render + stitch → dated MP3
 ├── make_briefing.sh            # full pipeline: render → upload → poll READY
 ├── briefings/
-│   ├── briefing.txt            # the day's script (ARIA: / ANDREW: tagged lines)
+│   ├── briefing.txt            # the day's script (AVA: / ANDREW: tagged lines)
 │   └── briefing-YYYY-MM-DD.mp3 # rendered episodes (git-ignored)
 └── docs/
     ├── README.md               # this file
@@ -32,7 +32,7 @@ hand-written sample script. See [the roadmap](#roadmap) for where it's headed.
 
 | Component | Purpose |
 |-----------|---------|
-| `briefings/briefing.txt` | The day's script. One line per turn, tagged `ARIA:` / `ANDREW:`. |
+| `briefings/briefing.txt` | The day's script. One line per turn, tagged `AVA:` / `ANDREW:`. |
 | `render_briefing.py` | Renders both voices (edge-tts) at `+12%` tempo, inserts 0.35s gaps, stitches to a dated MP3 (ffmpeg). Config — voices, rate, gap — is at the top of the file. |
 | `make_briefing.sh` | Full pipeline: render → upload to the show → poll until the episode is `READY`. |
 
@@ -73,7 +73,7 @@ gitignored `.env` (or your shell). `--dry-run` needs no key. Models are configur
 
 ### Hand-written briefing (still supported)
 
-Edit `briefings/briefing.txt` directly (keep the `ARIA:` / `ANDREW:` tags), then:
+Edit `briefings/briefing.txt` directly (keep the `AVA:` / `ANDREW:` tags), then:
 ```sh
 ./make_briefing.sh                 # render + upload
 python3 render_briefing.py         # render only → briefings/briefing-YYYY-MM-DD.mp3

@@ -32,7 +32,7 @@ flowchart TD
         RANK["rank<br/>freshness × importance × interest-match<br/>× novelty-vs-yesterday"]
         PLAN["plan<br/>order segments to a duration budget"]
         EDITOR["editor<br/>new vs developing vs skip · cross-discipline<br/>connections · forward-looking questions · wit"]
-        SCRIPT["script<br/>two-host ARIA:/ANDREW: dialogue<br/>grounded, attributed, no synth quotes"]
+        SCRIPT["script<br/>two-host AVA:/ANDREW: dialogue<br/>grounded, attributed, no synth quotes"]
     end
 
     ARTIFACTS["briefings/briefing.txt + episode.json"]
@@ -140,6 +140,6 @@ numbers"):
 - **Guardrails hold.** Connections and questions are framed as analysis, kept distinct from
   sourced fact; the editor never invents quotes or data.
 
-The two hosts carry this: **ARIA** anchors (leads, frames, reads the through-line), **ANDREW**
+The two hosts carry this: **AVA** anchors (leads, frames, reads the through-line), **ANDREW**
 is the analyst (connects, questions, the occasional aside). Tone and inspirations are
 user-configurable in `profile.yaml` (`style.tone`, `style.inspirations`).

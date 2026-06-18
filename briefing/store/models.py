@@ -79,7 +79,7 @@ class EpisodeSegment(BaseModel):
     order_index: int
     kind: str
     story_cluster_id: str | None = None
-    script: str = ""                 # ARIA:/ANDREW: tagged dialogue for this segment
+    script: str = ""                 # AVA:/ANDREW: tagged dialogue for this segment
     source_attributions: list[SourceAttribution] = Field(default_factory=list)
     audio_offset_sec: float | None = None
     start_time: float | None = None

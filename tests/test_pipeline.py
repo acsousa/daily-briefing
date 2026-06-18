@@ -112,7 +112,7 @@ class _StubLLM:
             for i in ids])
 
     def complete(self, system, user, model=None, max_tokens=16000):
-        return "ARIA: Here is the story.\nANDREW: And here is the analysis."
+        return "AVA: Here is the story.\nANDREW: And here is the analysis."
 
 
 def test_editor_and_script_produce_grounded_segments(tmp_path):
@@ -131,7 +131,7 @@ def test_editor_and_script_produce_grounded_segments(tmp_path):
 
     text, segments, briefed = write_script(
         llm, plan, editor_output, clusters_by_id, articles_by_id, {}, PROFILE, None, TODAY)
-    assert "ARIA:" in text and "ANDREW:" in text
+    assert "AVA:" in text and "ANDREW:" in text
     headline_segs = [s for s in segments if s.kind == "headline"]
     assert headline_segs and headline_segs[0].source_attributions[0].url == "https://e.com/a"
     assert briefed                                 # feeds the continuity update

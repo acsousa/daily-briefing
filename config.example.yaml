@@ -83,7 +83,7 @@ llm:
   effort: high
 
 voices:
-  ARIA: en-US-AriaNeural
+  AVA: en-US-AvaNeural
   ANDREW: en-US-AndrewNeural
 
 render:

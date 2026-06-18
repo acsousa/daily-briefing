@@ -3,7 +3,7 @@
 Render a two-host briefing script to a single dated MP3.
 
 Input (briefings/briefing.txt): one line per turn, prefixed with a speaker tag
-(ARIA: / ANDREW:). Lines without a tag continue the previous speaker. A BLANK LINE
+(AVA: / ANDREW:). Lines without a tag continue the previous speaker. A BLANK LINE
 marks a segment boundary — the renderer inserts a longer pause and (optionally) a
 short music sting there.
 
@@ -19,7 +19,7 @@ import tempfile
 from datetime import date
 from pathlib import Path
 
-DEFAULT_VOICES = {"ARIA": "en-US-AriaNeural", "ANDREW": "en-US-AndrewNeural"}
+DEFAULT_VOICES = {"AVA": "en-US-AvaNeural", "ANDREW": "en-US-AndrewNeural"}
 SCRIPT_FILE = "briefing.txt"
 SEG_MARKER = "[[SEG]]"          # segment boundary (longer pause + sting)
 

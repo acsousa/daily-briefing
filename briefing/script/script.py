@@ -1,6 +1,6 @@
 """Scriptwriter: render the editorial brief into grounded two-host dialogue.
 
-Output is the existing ARIA:/ANDREW: tagged format the renderer consumes. Segments are
+Output is the existing AVA:/ANDREW: tagged format the renderer consumes. Segments are
 separated by a blank line so the renderer inserts a longer pause + sting between them.
 """
 from __future__ import annotations
@@ -9,10 +9,10 @@ from datetime import date
 
 from ..store import EpisodeSegment, SourceAttribution
 
-_SYSTEM = """You write a two-host audio briefing. ARIA anchors (leads, frames, reads the
+_SYSTEM = """You write a two-host audio briefing. AVA anchors (leads, frames, reads the
 through-line); ANDREW is the analyst (connects, questions, the occasional dry aside).
 
-Output ONLY dialogue lines, each starting with `ARIA:` or `ANDREW:` — one speaker per line,
+Output ONLY dialogue lines, each starting with `AVA:` or `ANDREW:` — one speaker per line,
 alternating naturally. No stage directions, no markdown, no headers.
 
 What makes it good (read carefully):

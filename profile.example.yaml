@@ -29,7 +29,7 @@ style:
   reading_level: informed general
   banned: [clickbait, filler]
   hosts:
-    ARIA:   { role: anchor,  voice: en-US-AriaNeural }
+    AVA:    { role: anchor,  voice: en-US-AvaNeural }
     ANDREW: { role: analyst, voice: en-US-AndrewNeural }
 
 episode:
