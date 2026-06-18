@@ -21,6 +21,7 @@ from pathlib import Path
 
 DEFAULT_VOICES = {"ARIA": "en-US-AriaNeural", "ANDREW": "en-US-AndrewNeural"}
 SCRIPT_FILE = "briefing.txt"
+SEG_MARKER = "[[SEG]]"          # segment boundary (longer pause + sting)
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 BRIEFINGS_DIR = REPO_ROOT / "briefings"
@@ -48,7 +49,9 @@ def parse_turns(text):
     for raw in text.splitlines():
         line = raw.strip()
         if not line:
-            seg_break = True                 # blank line => next turn starts a segment
+            continue                          # blank lines are cosmetic; ignore
+        if line == SEG_MARKER:
+            seg_break = True                  # next turn starts a new segment
             continue
         spk = None
         for tag in VOICES:

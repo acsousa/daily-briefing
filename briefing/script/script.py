@@ -121,11 +121,13 @@ def write_script(llm, plan, editor_output, clusters_by_id, articles_by_id,
             source_attributions=attrs,
         ))
 
-    # assemble: blank line (segment boundary) before break segments, single newline otherwise
+    # assemble: an explicit [[SEG]] marker before break segments (the renderer puts a
+    # longer pause + sting there). Plain newline where segments should flow together.
+    # A sentinel is used rather than a blank line because the model double-spaces turns.
     chunks = []
     for i, (text, brk) in enumerate(parts):
         if i > 0:
-            chunks.append("\n\n" if brk else "\n")
+            chunks.append("\n[[SEG]]\n" if brk else "\n")
         chunks.append(text)
     briefing_text = "".join(chunks) + "\n"
     return briefing_text, episode_segments, briefed
