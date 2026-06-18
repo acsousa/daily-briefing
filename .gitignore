@@ -1,0 +1,20 @@
+# Generated audio artifacts
+*.mp3
+*.aiff
+*.wav
+*.ogg
+*.m4a
+
+# Generated cover art
+cover.jpg
+cover.png
+
+# Python
+__pycache__/
+*.pyc
+
+# Local Claude Code settings (machine-specific)
+.claude/settings.local.json
+
+# Auth tokens must never be committed (CLI stores these in ~/.config, but just in case)
+token.json
