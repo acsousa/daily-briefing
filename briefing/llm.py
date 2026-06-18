@@ -19,6 +19,7 @@ class LLM:
         cfg = config.get("llm", {})
         self.default_model = cfg.get("default_model", "claude-sonnet-4-6")
         self.editor_model = cfg.get("editor_model", self.default_model)
+        self.script_model = cfg.get("script_model", self.default_model)
         self.effort = cfg.get("effort", "high")
         self._client = None
 

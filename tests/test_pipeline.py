@@ -99,6 +99,7 @@ class _StubLLM:
     """Stand-in for briefing.llm.LLM — no API calls."""
     default_model = "stub"
     editor_model = "stub"
+    script_model = "stub"
 
     def parse(self, system, user, schema, model=None, max_tokens=16000):
         # one brief per story_cluster_id present in the prompt

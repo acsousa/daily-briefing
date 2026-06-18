@@ -79,6 +79,7 @@ ranking:
 llm:
   default_model: claude-sonnet-4-6
   editor_model: claude-opus-4-8
+  script_model: claude-sonnet-4-6     # the briefing copy; bump to claude-opus-4-8 for quality
   effort: high
 
 voices:
@@ -86,5 +87,7 @@ voices:
   ANDREW: en-US-AndrewNeural
 
 render:
-  rate: "+12%"
-  gap_seconds: 0.35
+  rate: "+0%"                # natural pace (negative slows further, e.g. "-5%")
+  gap_seconds: 0.40          # pause between turns within a segment
+  segment_gap_seconds: 1.1   # longer pause at segment boundaries
+  sting: generated           # short music bumper between segments; "none" to disable

@@ -40,6 +40,14 @@ connective through-line for the episode. For each story:
 - recap_line: for a DEVELOPING story, one sentence on what was said before so today builds
   on it instead of repeating. Empty string for a new story.
 
+Focus on SUBSTANCE, not market mechanics. The angle and why_it_matters should be about what
+happened and its stakes — not stock-price reactions. For a markets/movers story, pick the one
+or two genuinely meaningful developments and say why they matter; never frame a story as a
+roll-call of tickers and percentages.
+
+The first story in the rundown is the LEAD — give it the richest angle. The rest are quick
+hits: a sharp angle and a tight why_it_matters, no sprawling connections.
+
 Hard rules: connections and questions are analysis, kept distinct from sourced fact. Never
 invent quotes, numbers, or events. Honor the user's interests and tone.
 Return one segment brief per story, preserving the given story_cluster_id values."""

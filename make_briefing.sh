@@ -27,8 +27,10 @@ OUT="briefings/briefing-$DATE.mp3"
 #          (ARIA:/ANDREW: tagged lines) before running for a real briefing.
 
 # Step B — render two-host audio (edge-tts per turn + ffmpeg stitch)
+# Prefer the venv Python so the renderer can read config (rate, gaps, sting).
 echo ">> Rendering audio: $OUT"
-python3 render_briefing.py
+PY="python3"; [ -x ".venv/bin/python" ] && PY=".venv/bin/python"
+"$PY" render_briefing.py
 
 # Step C — upload to the dedicated show, poll until READY
 echo ">> Uploading to Spotify"

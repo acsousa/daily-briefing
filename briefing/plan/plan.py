@@ -7,9 +7,12 @@ from datetime import date, datetime, timezone
 from ..store import EpisodePlan, PlannedSegment
 
 INTRO_SEC = 25
-WEATHER_SEC = 35
+WEATHER_SEC = 20            # shortened — weather is a quick note, not a segment
 OUTRO_SEC = 20
-MIN_BODY_SEC = 75            # floor per headline segment
+LEAD_SHARE = 0.40          # the lead story gets a deeper treatment
+LEAD_MAX_SEC = 240
+QUICKHIT_MIN_SEC = 60      # the rest are tight hits
+QUICKHIT_MAX_SEC = 110
 
 
 def build_plan(ranked_clusters, profile, config, *, has_weather: bool, today: date,
@@ -24,16 +27,22 @@ def build_plan(ranked_clusters, profile, config, *, has_weather: bool, today: da
         segments.append(PlannedSegment(kind="weather", allotted_sec=WEATHER_SEC))
 
     fixed = sum(s.allotted_sec for s in segments) + OUTRO_SEC
-    body_budget = max(target_sec - fixed, MIN_BODY_SEC)
+    body_budget = max(target_sec - fixed, QUICKHIT_MIN_SEC)
     body_slots = max(max_segments - len(segments) - 1, 1)
 
     selected = _select(ranked_clusters, body_slots, body_budget, must_cover)
-    total_score = sum((c.score or 0.01) for c in selected) or 1.0
-    for c in selected:
-        share = (c.score or 0.01) / total_score
-        allotted = max(int(body_budget * share), MIN_BODY_SEC)
+    if selected:
+        # lead story deeper; the rest are tight quick hits
+        lead_sec = min(int(body_budget * LEAD_SHARE), LEAD_MAX_SEC)
         segments.append(PlannedSegment(
-            kind="headline", story_cluster_id=c.id, allotted_sec=allotted))
+            kind="headline", story_cluster_id=selected[0].id, allotted_sec=lead_sec))
+        rest = selected[1:]
+        if rest:
+            per = (body_budget - lead_sec) // len(rest)
+            per = max(min(per, QUICKHIT_MAX_SEC), QUICKHIT_MIN_SEC)
+            for c in rest:
+                segments.append(PlannedSegment(
+                    kind="headline", story_cluster_id=c.id, allotted_sec=per))
 
     segments.append(PlannedSegment(kind="outro", allotted_sec=OUTRO_SEC))
 
