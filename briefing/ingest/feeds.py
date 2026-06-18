@@ -14,9 +14,17 @@ import httpx
 from .base import SourceAdapter, make_article
 
 
+# Some publishers 403 non-browser User-Agents; present a browser-like one (common
+# for feed readers). Personal reading — see memory: personal-reading-content-policy.
+_USER_AGENT = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+)
+
+
 def _http_get(url: str) -> bytes:
     r = httpx.get(url, timeout=20, follow_redirects=True,
-                  headers={"User-Agent": "daily-briefing/0.1"})
+                  headers={"User-Agent": _USER_AGENT})
     r.raise_for_status()
     return r.content
 

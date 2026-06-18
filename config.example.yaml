@@ -29,7 +29,7 @@ sources:
   # --- business / economy / finance ---
   - { id: marketwatch,    name: MarketWatch,      type: rss, url: "http://feeds.marketwatch.com/marketwatch/topstories/", topics: [business] }
   - { id: cnbc_finance,   name: CNBC Finance,     type: rss, url: "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=10000664", topics: [business] }
-  - { id: marketplace,    name: Marketplace,      type: rss, url: "https://www.marketplace.org/feed/",             topics: [business] }
+  - { id: marketplace,    name: Marketplace,      type: rss, url: "https://feeds.publicradio.org/public_feeds/marketplace-morning-report/rss/rss", topics: [business] }
   # --- science ---
   - { id: quanta,         name: Quanta Magazine,  type: rss, url: "https://api.quantamagazine.org/feed/",          topics: [science] }
   - { id: sciencenews,    name: Science News,     type: rss, url: "https://www.sciencenews.org/feed",             topics: [science] }
@@ -43,14 +43,13 @@ sources:
   - { id: aljazeera,      name: Al Jazeera,       type: rss, url: "https://www.aljazeera.com/xml/rss/all.xml",     topics: [world] }
   # --- politics ---
   - { id: thehill,        name: The Hill,         type: rss, url: "https://thehill.com/news/feed/",                topics: [politics] }
-  - { id: politico,       name: Politico,         type: rss, url: "https://www.politico.com/rss/politicopicks.xml",topics: [politics] }
+  - { id: politico,       name: Politico,         type: rss, url: "https://rss.politico.com/politics-news.xml",     topics: [politics] }
   - { id: npr_politics,   name: NPR Politics,     type: rss, url: "https://feeds.npr.org/1014/rss.xml",            topics: [politics] }
   # --- sports ---
   - { id: espn,           name: ESPN,             type: rss, url: "https://www.espn.com/espn/rss/news",            topics: [sports] }
   - { id: bbc_sport,      name: BBC Sport,        type: rss, url: "http://feeds.bbci.co.uk/sport/rss.xml",         topics: [sports] }
   # --- entertainment / culture / celebrity ---
   - { id: variety,        name: Variety,          type: rss, url: "https://variety.com/feed/",                     topics: [entertainment] }
-  - { id: ew,             name: Entertainment Weekly, type: rss, url: "https://ew.com/feed/",                      topics: [entertainment] }
   # --- local --- add your own metro feeds in config.yaml; none shipped by default.
 
 weather:
