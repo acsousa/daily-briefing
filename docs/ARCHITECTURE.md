@@ -77,13 +77,16 @@ flowchart TD
 | Sourcing catalog | `config.example.yaml` | 1 | ✅ broad catalog |
 | Ingestion (fetch→normalize→dedupe→relevance) | `briefing/ingest/` | 1 | ✅ built |
 | `brief ingest` CLI | `briefing/cli.py` | 1 | ✅ built |
-| Weather adapter | `briefing/ingest/weather.py` | 1 | ⏳ next |
-| Clustering | `briefing/cluster/` | 1 | ⏳ |
-| Ranking (profile weights + novelty) | `briefing/rank/` | 1 | ⏳ |
-| Continuity (story threads / episode memory) | `briefing/continuity/` | 1 | ⏳ |
-| Planner (duration budget) | `briefing/plan/` | 1–2 | ⏳ |
-| Editor (connections · questions · wit) | `briefing/editor/` | 1 | ⏳ |
-| Scripting (grounded two-host) | `briefing/script/` | 1 | ⏳ |
+| Weather adapter (Open-Meteo) | `briefing/ingest/weather.py` | 1 | ✅ built |
+| Full-text extraction | `briefing/ingest/extract.py` | 1 | ✅ built |
+| Clustering | `briefing/cluster/` | 1 | ✅ built |
+| Ranking (profile weights + novelty) | `briefing/rank/` | 1 | ✅ built |
+| Continuity (story threads / episode memory) | `briefing/continuity/` | 1 | ✅ built |
+| Planner (duration budget from config) | `briefing/plan/` | 1–2 | ✅ built |
+| Editor (connections · questions · wit) | `briefing/editor/` | 1 | ✅ built (Opus) |
+| Scripting (grounded two-host) | `briefing/script/` | 1 | ✅ built (Sonnet) |
+| LLM wrapper | `briefing/llm.py` | 1 | ✅ built |
+| `brief generate` (full pipeline) | `briefing/cli.py` | 1 | ✅ built |
 | Render | `briefing/render/` | v0 | ✅ built |
 | Upload | `make_briefing.sh` / `briefing/publish/` | v0 | ✅ built |
 | Timecodes + segment model | `briefing/render/` | 2 | ⏳ |

@@ -49,16 +49,34 @@ hand-written sample script. See [the roadmap](#roadmap) for where it's headed.
 
 ## Usage
 
-1. Edit `briefings/briefing.txt` with the day's content (keep the `ARIA:` / `ANDREW:` tags).
-2. Run the pipeline from the repo root:
-   ```sh
-   ./make_briefing.sh
-   ```
-   It renders the audio, uploads it to the show, and waits until the episode is playable.
+### Generate a real briefing (Phase 1 pipeline)
 
-To preview locally without uploading, just render:
 ```sh
-python3 render_briefing.py      # writes briefings/briefing-YYYY-MM-DD.mp3
+pip install -e ".[dev]"            # installs the briefing package + deps
+brief generate                     # ingest → cluster → rank → plan → edit → script
+./make_briefing.sh                 # render + upload the generated briefings/briefing.txt
+```
+
+`brief generate` reads your `profile.yaml` (interests, style) and `config.yaml` (feeds,
+target duration, voices) and writes `briefings/briefing.txt` + `briefings/episode.json`.
+Useful flags:
+
+```sh
+brief generate --dry-run           # ingest + plan only; prints the rundown, no LLM calls
+brief generate --minutes 25        # override target duration
+brief ingest                       # just fetch + filter + store articles
+```
+
+The editor and scriptwriter stages call the Claude API, so set `ANTHROPIC_API_KEY` in a
+gitignored `.env` (or your shell). `--dry-run` needs no key. Models are configured under
+`llm:` in `config.yaml` (editor → Opus, scripting → Sonnet by default).
+
+### Hand-written briefing (still supported)
+
+Edit `briefings/briefing.txt` directly (keep the `ARIA:` / `ANDREW:` tags), then:
+```sh
+./make_briefing.sh                 # render + upload
+python3 render_briefing.py         # render only → briefings/briefing-YYYY-MM-DD.mp3
 ```
 
 ## Roadmap

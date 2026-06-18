@@ -24,6 +24,9 @@ profile.yaml
 # Local SQLite store
 *.db
 
+# Generated episode metadata
+briefings/episode.json
+
 # macOS
 .DS_Store
 
