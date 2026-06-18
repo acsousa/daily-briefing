@@ -9,10 +9,10 @@ from ..store import EpisodePlan, PlannedSegment
 INTRO_SEC = 25
 WEATHER_SEC = 20            # shortened — weather is a quick note, not a segment
 OUTRO_SEC = 20
-LEAD_SHARE = 0.40          # the lead story gets a deeper treatment
-LEAD_MAX_SEC = 240
-QUICKHIT_MIN_SEC = 60      # the rest are tight hits
-QUICKHIT_MAX_SEC = 110
+LEAD_SHARE = 0.30          # the lead story gets a deeper treatment
+LEAD_MAX_SEC = 300
+QUICKHIT_MIN_SEC = 70      # the rest are tight hits
+QUICKHIT_MAX_SEC = 160
 
 
 def build_plan(ranked_clusters, profile, config, *, has_weather: bool, today: date,

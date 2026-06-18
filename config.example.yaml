@@ -89,5 +89,6 @@ voices:
 render:
   rate: "+0%"                # natural pace (negative slows further, e.g. "-5%")
   gap_seconds: 0.40          # pause between turns within a segment
-  segment_gap_seconds: 1.1   # longer pause at segment boundaries
-  sting: generated           # short music bumper between segments; "none" to disable
+  segment_gap_seconds: 0.7   # pause flanking the music sting at segment boundaries
+  sting: generated           # rotating ~2s music bumper between segments; "none" to disable,
+                             # or a path to your own audio file
