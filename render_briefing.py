@@ -24,10 +24,11 @@ VOICES = {
 }
 RATE = "+12%"          # slightly faster tempo than default
 GAP_SECONDS = 0.35     # silence between turns
-SCRIPT_FILE = "briefing.txt"
+SCRIPT_FILE = "briefing.txt"   # input script, lives in briefings/
 # -----------------------------------------------------------------------------
 
 HERE = Path(__file__).resolve().parent
+BRIEFINGS_DIR = HERE / "briefings"   # script input + rendered MP3 outputs
 
 
 def parse_turns(text):
@@ -60,12 +61,12 @@ def run(cmd):
 
 
 def main():
-    script_path = HERE / SCRIPT_FILE
+    script_path = BRIEFINGS_DIR / SCRIPT_FILE
     turns = parse_turns(script_path.read_text())
     if not turns:
         raise SystemExit("no turns parsed from script")
 
-    out = HERE / f"briefing-{date.today().isoformat()}.mp3"
+    out = BRIEFINGS_DIR / f"briefing-{date.today().isoformat()}.mp3"
 
     with tempfile.TemporaryDirectory() as td:
         td = Path(td)

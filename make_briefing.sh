@@ -20,9 +20,9 @@ SHOW_TITLE="Andrew's Daily Rundown"
 
 DATE="$(date +%Y-%m-%d)"
 PRETTY_DATE="$(date +'%B %-d, %Y')"
-OUT="briefing-$DATE.mp3"
+OUT="briefings/briefing-$DATE.mp3"
 
-# Step A — (agent step) regenerate briefing.txt with today's content.
+# Step A — (agent step) regenerate briefings/briefing.txt with today's content.
 #          Currently it holds a sample script. Have the agent rewrite it
 #          (ARIA:/ANDREW: tagged lines) before running for a real briefing.
 

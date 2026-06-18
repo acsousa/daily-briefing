@@ -13,6 +13,9 @@ cover.png
 __pycache__/
 *.pyc
 
+# macOS
+.DS_Store
+
 # Local Claude Code settings (machine-specific)
 .claude/settings.local.json
 
