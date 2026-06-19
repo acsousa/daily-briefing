@@ -92,15 +92,24 @@
           <div id="topic-suggest" style="display:flex;flex-wrap:wrap;gap:7px;"></div>
         </div>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
-          <div>
-            <div class="lbl">┌─ LENGTH ──</div>
-            <div id="lengths" style="display:flex;gap:6px;"></div>
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;">
+            <div class="lbl" style="margin:0;">┌─ LENGTH ──────</div>
+            <div id="len-label" style="font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.16em;color:#a78bfa;">10 MIN</div>
           </div>
-          <div>
-            <div class="lbl">┌─ DROP TIME ──</div>
-            <div id="times" style="display:flex;gap:6px;"></div>
+          <div style="position:relative;height:30px;">
+            <div style="position:absolute;top:50%;left:0;right:0;height:3px;transform:translateY(-50%);background:rgba(167,139,250,0.14);"></div>
+            <div id="len-fill" style="position:absolute;top:50%;left:0;height:3px;transform:translateY(-50%);background:linear-gradient(90deg,#7c5cf0,#a78bfa);box-shadow:0 0 12px rgba(167,139,250,0.5);width:20%;"></div>
+            <div id="len-dots" style="position:absolute;inset:0;"></div>
+            <div id="len-thumb" style="position:absolute;top:50%;transform:translate(-50%,-50%);width:14px;height:14px;border-radius:50%;background:#06120e;border:2px solid #a78bfa;box-shadow:0 0 14px rgba(167,139,250,0.8);left:20%;z-index:2;"></div>
+            <input id="length" class="tone" type="range" min="5" max="30" step="5" value="10" style="z-index:3;"/>
           </div>
+          <div style="display:flex;justify-content:space-between;font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.14em;color:#54655e;margin-top:2px;"><span>5 MIN</span><span>30 MIN</span></div>
+        </div>
+
+        <div>
+          <div class="lbl">┌─ DROP TIME ──────</div>
+          <div id="times" style="display:flex;gap:6px;"></div>
         </div>
 
         <div>
@@ -146,19 +155,20 @@
 </div>
 
 <script>
-const LENGTHS = [{label:'5',val:'5'},{label:'10',val:'10'},{label:'20',val:'20'},{label:'30',val:'30'}];
 const TIMES = [{label:'Dawn',sub:'6:00 AM',val:'06:00'},{label:'Commute',sub:'8:00 AM',val:'08:00'},{label:'Midday',sub:'12:00 PM',val:'12:00'},{label:'Evening',sub:'7:00 PM',val:'19:00'}];
+const LEN_STOPS = [5,10,15,20,25,30];
 let SUGGEST = ['technology','defense','robotics','business','science','health','world','politics','sports','entertainment','local'];
-let VOICES = [{id:'en-US-AvaNeural',name:'AVA',desc:'Expressive'},{id:'en-US-AriaNeural',name:'ARIA',desc:'Crisp & neutral'},{id:'en-US-JennyNeural',name:'JENNY',desc:'Warm'},{id:'en-US-MichelleNeural',name:'MICHELLE',desc:'Friendly'}];
+let VOICES = [{id:'ava_andrew',name:'AVA & ANDREW',desc:'Expressive ♀ · Warm ♂'},{id:'aria_guy',name:'ARIA & GUY',desc:'Crisp ♀ · Easy ♂'},{id:'jenny_brian',name:'JENNY & BRIAN',desc:'Warm ♀ · Mellow ♂'},{id:'emma_eric',name:'EMMA & ERIC',desc:'Bright ♀ · Calm ♂'}];
 
-const state = {name:'',topics:['technology','business'],length:'10',time:'08:00',voice:'en-US-AvaNeural',tone:35,favor:[],avoid:[]};
+const state = {name:'',topics:['technology','business'],length:10,time:'08:00',voice:'ava_andrew',tone:35,favor:[],avoid:[]};
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
 function toneLabel(t){ return t<33?'ANALYTICAL':t<66?'BALANCED':'PLAYFUL'; }
-function nearestLength(v){ const n=+v; let best=LENGTHS[0].val,d=1e9; for(const l of LENGTHS){const dd=Math.abs(+l.val-n); if(dd<d){d=dd;best=l.val;}} return best; }
+function snapLength(v){ const n=Math.round((+v||10)/5)*5; return Math.min(30,Math.max(5,n)); }
+function lenPct(v){ return (v-5)/25*100; }
 function timeDisplay(v){ const t=TIMES.find(x=>x.val===v); return t?t.sub:v; }
-function voiceName(id){ const v=VOICES.find(x=>x.id===id); return v?v.name:(id||'').replace(/^en-US-|Neural$/g,''); }
+function voiceName(id){ const v=VOICES.find(x=>x.id===id); return v?v.name:(id||'').toUpperCase(); }
 
 function tag(text, kind, idx){
   const col = kind==='avoid' ? '224,122,122' : '52,211,153';
@@ -183,9 +193,14 @@ function render(){
     return `<div class="opt${sel?' sel':''}" data-act="topic" data-val="${esc(l)}" style="padding:7px 12px;border:1px solid rgba(52,211,153,${sel?0.4:0.16});color:${sel?'#cdeede':'#9fb3ab'};font:500 12px 'IBM Plex Mono',monospace;"><span class="fill" style="background:rgba(52,211,153,0.2);box-shadow:inset 0 0 0 1px #34d399;"></span><span style="position:relative;z-index:1;">${esc(l)}</span></div>`;
   }).join('');
 
-  $('lengths').innerHTML = LENGTHS.map(l=>{
-    const sel = state.length===l.val;
-    return `<div class="opt${sel?' sel':''}" data-act="length" data-val="${l.val}" style="flex:1;text-align:center;padding:10px 2px;border:1px solid rgba(167,139,250,${sel?0.45:0.18});"><span class="fill" style="background:rgba(167,139,250,0.2);box-shadow:inset 0 0 0 1px #a78bfa;"></span><div style="position:relative;z-index:1;font:600 17px 'Space Grotesk';color:#eee9ff;">${l.label}</div></div>`;
+  const lp = lenPct(state.length);
+  $('length').value = state.length;
+  $('len-fill').style.width = lp + '%';
+  $('len-thumb').style.left = lp + '%';
+  $('len-label').textContent = state.length + ' MIN';
+  $('len-dots').innerHTML = LEN_STOPS.map(v=>{
+    const on = state.length >= v;
+    return `<span style="position:absolute;top:50%;transform:translate(-50%,-50%);width:6px;height:6px;border-radius:50%;left:${lenPct(v)}%;background:${on?'#a78bfa':'#2b2f3a'};box-shadow:${on?'0 0 6px rgba(167,139,250,0.7)':'none'};"></span>`;
   }).join('');
 
   $('times').innerHTML = TIMES.map(t=>{
@@ -213,7 +228,6 @@ document.addEventListener('click', e=>{
   if(opt){
     const act = opt.dataset.act, val = opt.dataset.val;
     if(act==='topic') state.topics = state.topics.includes(val) ? state.topics.filter(x=>x!==val) : [...state.topics,val];
-    else if(act==='length') state.length = val;
     else if(act==='time') state.time = val;
     else if(act==='voice') state.voice = val;
     render(); return;
@@ -229,6 +243,7 @@ document.addEventListener('click', e=>{
 });
 $('name').addEventListener('input', e=>{ state.name=e.target.value; $('r-name').textContent=state.name||'—'; });
 $('tone').addEventListener('input', e=>{ state.tone=+e.target.value; render(); });
+$('length').addEventListener('input', e=>{ state.length=snapLength(e.target.value); render(); });
 function tagInput(inputId, key){
   $(inputId).addEventListener('keydown', e=>{
     if(e.key!=='Enter') return; e.preventDefault();
@@ -260,7 +275,7 @@ async function load(){
   try{
     const c = await (await fetch('/api/config')).json();
     Object.assign(state, {
-      name:c.name||'', topics:c.topics||[], length:nearestLength(c.length||'10'),
+      name:c.name||'', topics:c.topics||[], length:snapLength(c.length||10),
       time:c.time||'08:00', voice:c.voice||VOICES[0].id, tone:+c.tone||35,
       favor:c.favor||[], avoid:c.avoid||[]
     });

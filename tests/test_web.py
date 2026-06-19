@@ -10,13 +10,13 @@ def test_yaml_to_form_projects_values():
         "style": {"playfulness": 40, "tone": "rich paragraph"},
     }
     config = {"episode": {"target_duration_minutes": 25}, "schedule": {"drop_time": "05:00"},
-              "voices": {"AVA": "en-US-AriaNeural", "ANDREW": "en-US-AndrewNeural"}}
+              "voices": {"AVA": "en-US-AriaNeural", "ANDREW": "en-US-GuyNeural"}}
     form = yaml_to_form(profile, config)
     assert form["name"] == "Andrew Sousa"
     assert form["topics"] == ["technology", "defense"]
-    assert form["length"] == "25"
+    assert form["length"] == 25
     assert form["time"] == "05:00"
-    assert form["voice"] == "en-US-AriaNeural"
+    assert form["voice"] == "aria_guy"            # matched the Aria+Guy pair
     assert form["tone"] == 40
     assert form["avoid"] == ["sports"] and form["favor"] == ["earnings"]
 
@@ -30,8 +30,8 @@ def test_form_to_yaml_preserves_untouched_keys():
     }
     config = {"sources": [{"id": "wbur"}], "weather": {"latitude": 42.0},
               "llm": {"default_model": "claude-opus-4-8"}, "episode": {"target_duration_minutes": 25}}
-    form = {"name": "Andrew", "topics": ["defense", "ai startups"], "length": "20",
-            "time": "08:00", "voice": "en-US-JennyNeural", "tone": 70,
+    form = {"name": "Andrew", "topics": ["defense", "ai startups"], "length": 20,
+            "time": "08:00", "voice": "jenny_brian", "tone": 70,
             "favor": ["earnings"], "avoid": ["celebrity"]}
 
     new_profile, new_config = form_to_yaml(form, profile, config)
@@ -39,7 +39,8 @@ def test_form_to_yaml_preserves_untouched_keys():
     # patched
     assert new_profile["owner"]["name"] == "Andrew"
     assert new_config["episode"]["target_duration_minutes"] == 20
-    assert new_config["voices"]["AVA"] == "en-US-JennyNeural"
+    assert new_config["voices"]["AVA"] == "en-US-JennyNeural"     # the pair sets both
+    assert new_config["voices"]["ANDREW"] == "en-US-BrianNeural"
     assert new_config["schedule"]["drop_time"] == "08:00"
     assert new_profile["avoid"] == ["celebrity"] and new_profile["favor"] == ["earnings"]
     # existing 'defense' interest keeps its weight/keywords; freeform topic gets a keyword

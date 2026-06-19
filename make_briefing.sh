@@ -32,6 +32,17 @@ echo ">> Rendering audio: $OUT"
 PY="python3"; [ -x ".venv/bin/python" ] && PY=".venv/bin/python"
 "$PY" render_briefing.py
 
+# Sanity check: is the rendered audio close to the target duration?
+TARGET_MIN=$("$PY" -c "from briefing.config import load_config; print(load_config().get('episode',{}).get('target_duration_minutes',20))" 2>/dev/null || echo 20)
+ACTUAL_MIN=$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$OUT" 2>/dev/null | awk '{printf "%.1f", $1/60}')
+"$PY" - "$ACTUAL_MIN" "$TARGET_MIN" <<'PY'
+import sys
+a, t = float(sys.argv[1] or 0), float(sys.argv[2])
+lo, hi = t * 0.6, t * 1.4          # generous +/-40% buffer
+status = "ok" if lo <= a <= hi else "WARNING — outside target buffer"
+print(f">> Duration: {a:.1f}m (target {t:.0f}m, accept {lo:.0f}-{hi:.0f}m) — {status}")
+PY
+
 # Step C — upload to the dedicated show, poll until READY
 echo ">> Uploading to Spotify"
 RESULT=$("$STS" --json upload "$OUT" \

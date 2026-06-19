@@ -21,13 +21,31 @@ STATIC = Path(__file__).resolve().parent / "static"
 TAXONOMY = ["technology", "defense", "robotics", "business", "science", "health",
             "world", "politics", "sports", "entertainment", "local"]
 
-# Anchor (AVA-role) voice options — real edge-tts voices behind the design's voice cards.
+# Dual-host voice pairs (female anchor + male analyst) behind the design's voice cards.
+# `ava`/`andrew` are the edge-tts voices for the AVA-role and ANDREW-role script tags.
 VOICE_OPTIONS = [
-    {"id": "en-US-AvaNeural", "name": "AVA", "desc": "Expressive"},
-    {"id": "en-US-AriaNeural", "name": "ARIA", "desc": "Crisp & neutral"},
-    {"id": "en-US-JennyNeural", "name": "JENNY", "desc": "Warm"},
-    {"id": "en-US-MichelleNeural", "name": "MICHELLE", "desc": "Friendly"},
+    {"id": "ava_andrew", "name": "AVA & ANDREW", "desc": "Expressive ♀ · Warm ♂",
+     "ava": "en-US-AvaNeural", "andrew": "en-US-AndrewNeural"},
+    {"id": "aria_guy", "name": "ARIA & GUY", "desc": "Crisp ♀ · Easy ♂",
+     "ava": "en-US-AriaNeural", "andrew": "en-US-GuyNeural"},
+    {"id": "jenny_brian", "name": "JENNY & BRIAN", "desc": "Warm ♀ · Mellow ♂",
+     "ava": "en-US-JennyNeural", "andrew": "en-US-BrianNeural"},
+    {"id": "emma_eric", "name": "EMMA & ERIC", "desc": "Bright ♀ · Calm ♂",
+     "ava": "en-US-EmmaNeural", "andrew": "en-US-EricNeural"},
 ]
+_DEFAULT_PAIR = VOICE_OPTIONS[0]
+
+
+def _pair_for(voices: dict) -> str:
+    ava, andrew = voices.get("AVA"), voices.get("ANDREW")
+    for p in VOICE_OPTIONS:
+        if p["ava"] == ava and p["andrew"] == andrew:
+            return p["id"]
+    return _DEFAULT_PAIR["id"]
+
+
+def _pair_by_id(pid: str) -> dict:
+    return next((p for p in VOICE_OPTIONS if p["id"] == pid), _DEFAULT_PAIR)
 
 
 def _read_yaml(name: str) -> dict:
@@ -53,9 +71,9 @@ def yaml_to_form(profile: dict, config: dict) -> dict:
     return {
         "name": (profile.get("owner") or {}).get("name", ""),
         "topics": [i["topic"] for i in profile.get("interests", []) if isinstance(i, dict) and "topic" in i],
-        "length": str(int((config.get("episode") or {}).get("target_duration_minutes", 10))),
+        "length": int((config.get("episode") or {}).get("target_duration_minutes", 10)),
         "time": (config.get("schedule") or {}).get("drop_time", "08:00"),
-        "voice": (config.get("voices") or {}).get("AVA", VOICE_OPTIONS[0]["id"]),
+        "voice": _pair_for(config.get("voices") or {}),
         "tone": int(style.get("playfulness", 35)),
         "favor": list(profile.get("favor", [])),
         "avoid": list(profile.get("avoid", [])),
@@ -97,9 +115,10 @@ def form_to_yaml(form: dict, profile: dict, config: dict) -> tuple[dict, dict]:
     schedule["drop_time"] = form.get("time", "08:00")
     config["schedule"] = schedule
 
+    pair = _pair_by_id(form.get("voice") or _DEFAULT_PAIR["id"])
     voices = dict(config.get("voices") or {})
-    voices["AVA"] = form.get("voice") or VOICE_OPTIONS[0]["id"]
-    voices.setdefault("ANDREW", "en-US-AndrewNeural")
+    voices["AVA"] = pair["ava"]
+    voices["ANDREW"] = pair["andrew"]
     config["voices"] = voices
 
     return profile, config

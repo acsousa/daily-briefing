@@ -139,13 +139,34 @@ def cmd_generate(args) -> None:
     update_threads(store, briefed, decisions, today)
     store.close()
 
-    print(f"\nwrote {BRIEFINGS_DIR / 'briefing.txt'} and episode.json")
+    # sanity check: estimated spoken length vs the target (generous buffer)
+    words = len(briefing_text.split())
+    est_min = words / 150.0
+    target = config.get("episode", {}).get("target_duration_minutes", 20)
+    lo, hi = target * 0.6, target * 1.4
+    status = "ok" if lo <= est_min <= hi else "WARNING — outside target buffer"
+    print(f"sanity: ~{est_min:.1f} min of script ({words} words) vs target {target}m — {status}")
+
+    print(f"wrote {BRIEFINGS_DIR / 'briefing.txt'} and episode.json")
     print("next: ./make_briefing.sh  (renders + uploads)")
 
 
 def cmd_config(args) -> None:
     from .web import serve
     serve(port=args.port, open_browser=not args.no_browser)
+
+
+def cmd_schedule(args) -> None:
+    from . import schedule
+    if args.uninstall:
+        schedule.uninstall()
+        print("daily schedule removed")
+        return
+    hour, minute = schedule.install()
+    sched = load_config().get("schedule") or {}
+    print(f"daily briefing scheduled at {hour:02d}:{minute:02d} "
+          f"(drop {sched.get('drop_time', '08:00')} − {sched.get('lead_hours', 2)}h). "
+          f"Mac must be awake or asleep (not off); it runs on wake if missed.")
 
 
 def main(argv=None) -> None:
@@ -168,6 +189,10 @@ def main(argv=None) -> None:
     pc.add_argument("--port", type=int, default=8765)
     pc.add_argument("--no-browser", action="store_true")
     pc.set_defaults(func=cmd_config)
+
+    ps = sub.add_parser("schedule", help="install/remove the daily macOS launchd run")
+    ps.add_argument("--uninstall", action="store_true")
+    ps.set_defaults(func=cmd_schedule)
 
     args = parser.parse_args(argv)
     args.func(args)

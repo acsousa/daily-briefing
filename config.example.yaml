@@ -63,6 +63,12 @@ spotify:
 episode:
   target_duration_minutes: 20
 
+# Daily run schedule (macOS launchd, installed by `brief schedule`). The job runs
+# `lead_hours` before `drop_time` so the episode is ready by then.
+schedule:
+  drop_time: "08:00"   # when you want it ready (set via `brief config`)
+  lead_hours: 2        # build/render/upload this many hours earlier
+
 # Cross-episode continuity windows (days). Threads briefed within recent_days with no
 # new developments are down-weighted; the editor recaps developing stories within month_days.
 continuity:

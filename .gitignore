@@ -35,3 +35,6 @@ briefings/episode.json
 
 # Auth tokens must never be committed (CLI stores these in ~/.config, but just in case)
 token.json
+
+# Run logs
+briefings/*.log
