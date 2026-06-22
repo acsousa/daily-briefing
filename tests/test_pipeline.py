@@ -52,7 +52,7 @@ def test_rank_orders_by_score_and_sets_components():
     ranked = rank_clusters(cluster_articles(arts), PROFILE, now=NOW)
     assert all(c.score is not None for c in ranked)
     assert ranked == sorted(ranked, key=lambda c: c.score, reverse=True)
-    assert set(ranked[0].score_components) == {"freshness", "importance", "interest", "novelty"}
+    assert set(ranked[0].score_components) == {"freshness", "importance", "interest", "region", "novelty"}
 
 
 def test_continuity_marks_developing_and_damps_novelty():
@@ -102,17 +102,18 @@ class _StubLLM:
     script_model = "stub"
 
     def parse(self, system, user, schema, model=None, max_tokens=16000):
-        # one brief per story_cluster_id present in the prompt
+        # one beat-brief per story_cluster_id present in the prompt
         ids = [json.loads(line)["story_cluster_id"] for line in user.splitlines()
                if line.strip().startswith("{")]
+        Brief = schema.model_fields["segments"].annotation.__args__[0]
         return EditorOutput(through_line="Tech meets defense.", segments=[
-            schema.model_fields["segments"].annotation.__args__[0](
-                story_cluster_id=i, angle="angle", why_it_matters="it matters",
-                connections=[], forward_question="", joke="", recap_line="")
+            Brief(story_cluster_id=i, hook="hook", headline="The headline.",
+                  what_happened="The facts.", why_it_matters="It matters.",
+                  bridge="And next.", recap_line="")
             for i in ids])
 
     def complete(self, system, user, model=None, max_tokens=16000):
-        return "AVA: Here is the story.\nANDREW: And here is the analysis."
+        return "AVA: Here is the news.\nANDREW: And here is what it means."
 
 
 def test_editor_and_script_produce_grounded_segments(tmp_path):

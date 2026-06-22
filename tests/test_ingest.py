@@ -60,32 +60,21 @@ def test_dedupe_url_and_near_dup_title():
     assert [a.url for a in out] == ["https://ex.com/a?utm_source=x", "https://ex.com/c"]
 
 
-def test_relevance_keeps_drops_and_retags():
-    profile = {
-        "interests": [
-            {"topic": "technology", "weight": 1.0, "keywords": ["Nvidia"]},
-            {"topic": "local", "weight": 0.8, "keywords": ["MBTA"]},
-        ],
-        "avoid": ["celebrity", "sports", "entertainment"],
-    }
+def test_relevance_drops_only_avoided():
+    # filter keeps everything not avoided (interest/region targeting happens later)
+    profile = {"avoid": ["celebrity", "sports", "entertainment"]}
     tech = make_article(url="https://e.com/1", title="AI chip breakthrough",
                         summary="A new chip from Nvidia", source_id="s", source_name="S",
                         topics=["technology"])
-    local = make_article(url="https://e.com/2", title="MBTA adds trains",
-                         summary="Boston transit", source_id="s", source_name="S",
-                         topics=["world"])                       # matched via keyword, not source topic
-    celeb = make_article(url="https://e.com/3", title="Celebrity gossip",
-                         summary="entertainment news", source_id="s", source_name="S",
-                         topics=["entertainment"])               # avoided
-    sports = make_article(url="https://e.com/4", title="Game recap",
-                          summary="final scores", source_id="s", source_name="S",
-                          topics=["sports"])                     # avoided by source topic
     health = make_article(url="https://e.com/5", title="New study published",
                           summary="a study", source_id="s", source_name="S",
-                          topics=["health"])                     # not in profile -> dropped
+                          topics=["health"])                     # off-interest but NOT dropped
+    celeb = make_article(url="https://e.com/3", title="Celebrity gossip",
+                         summary="entertainment news", source_id="s", source_name="S",
+                         topics=["entertainment"])               # avoided (text + topic)
+    sports = make_article(url="https://e.com/4", title="Game recap", summary="final scores",
+                          source_id="s", source_name="S", topics=["sports"])   # avoided by topic
 
-    kept = filter_relevant([tech, local, celeb, sports, health], profile)
-    by_url = {a.url: a.topics for a in kept}
-    assert set(by_url) == {"https://e.com/1", "https://e.com/2"}
-    assert by_url["https://e.com/1"] == ["technology"]
-    assert by_url["https://e.com/2"] == ["local"]
+    kept = filter_relevant([tech, health, celeb, sports], profile)
+    assert {a.url for a in kept} == {"https://e.com/1", "https://e.com/5"}
+    assert kept[0].topics == ["technology"]                     # source topics preserved

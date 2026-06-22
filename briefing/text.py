@@ -23,11 +23,15 @@ def jaccard(a: set[str], b: set[str]) -> float:
 
 
 def entities(text: str) -> list[str]:
-    """Crude proper-noun extraction: capitalized words not at sentence start runs."""
-    found = re.findall(r"\b([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)*)\b", text or "")
+    """Individual capitalized words (proper-noun-ish), for cross-source story matching.
+
+    Individual tokens (not greedy phrases) so 'Alan Greenspan Dies' and 'Alan Greenspan,
+    the ...' share {Alan, Greenspan} regardless of title-case vs sentence-case headlines.
+    """
     seen, out = set(), []
-    for e in found:
-        if len(e) > 2 and e.lower() not in _STOPWORDS and e not in seen:
-            seen.add(e)
-            out.append(e)
-    return out[:10]
+    for w in re.findall(r"\b[A-Z][a-zA-Z]+\b", text or ""):
+        wl = w.lower()
+        if len(w) > 2 and wl not in _STOPWORDS and w not in seen:
+            seen.add(w)
+            out.append(w)
+    return out[:15]

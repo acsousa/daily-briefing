@@ -76,9 +76,10 @@ continuity:
   week_days: 7
   month_days: 30
 
-# Cluster ranking weights (need not sum to 1; normalized implicitly by comparison).
+# Cluster ranking weights (need not sum to 1; compared relatively).
+# importance = coverage salience (how many outlets cover a story → the day's biggest news).
 ranking:
-  weights: { freshness: 0.30, importance: 0.25, interest: 0.30, novelty: 0.15 }
+  weights: { freshness: 0.22, importance: 0.28, interest: 0.30, region: 0.12, novelty: 0.08 }
 
 # LLM stages. Editor uses the stronger model; everything else the default.
 # Auth: ANTHROPIC_API_KEY (env or .env). See docs.
@@ -96,5 +97,7 @@ render:
   rate: "+0%"                # natural pace (negative slows further, e.g. "-5%")
   gap_seconds: 0.40          # pause between turns within a segment
   segment_gap_seconds: 0.7   # pause flanking the music sting at segment boundaries
-  sting: generated           # rotating ~2s music bumper between segments; "none" to disable,
-                             # or a path to your own audio file
+  # intro/sting accept: "generated" (synth), "none", or a filename in briefings/assets/
+  # (or an absolute path). Drop royalty-free no-lyric tracks there to use real music.
+  intro: generated           # intro bumper before the briefing starts
+  sting: generated           # rotating bumper between segments

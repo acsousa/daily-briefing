@@ -13,6 +13,7 @@ LEAD_SHARE = 0.30          # the lead story gets a deeper treatment
 LEAD_MAX_SEC = 300
 QUICKHIT_MIN_SEC = 70      # the rest are tight hits
 QUICKHIT_MAX_SEC = 160
+TOP_SALIENT = 3            # always include this many of the biggest stories
 
 
 def build_plan(ranked_clusters, profile, config, *, has_weather: bool, today: date,
@@ -30,7 +31,10 @@ def build_plan(ranked_clusters, profile, config, *, has_weather: bool, today: da
     body_budget = max(target_sec - fixed, QUICKHIT_MIN_SEC)
     body_slots = max(max_segments - len(segments) - 1, 1)
 
-    selected = _select(ranked_clusters, body_slots, body_budget, must_cover)
+    # never miss the day's biggest stories: guarantee the top few by coverage salience
+    biggest = sorted(ranked_clusters, key=lambda c: (c.source_count, c.score or 0), reverse=True)
+    guaranteed = {c.id for c in biggest[:TOP_SALIENT] if c.source_count >= 2}
+    selected = _select(ranked_clusters, body_slots, body_budget, must_cover, guaranteed)
     if selected:
         # lead story deeper; the rest are tight quick hits
         lead_sec = min(int(body_budget * LEAD_SHARE), LEAD_MAX_SEC)
@@ -58,21 +62,31 @@ def build_plan(ranked_clusters, profile, config, *, has_weather: bool, today: da
     )
 
 
-def _select(ranked, slots, budget, must_cover):
-    """Pick clusters: must-cover topics first, then by rank, fitting slot/budget caps."""
+def _select(ranked, slots, budget, must_cover, guaranteed=frozenset()):
+    """Pick clusters: biggest stories + must-cover first, then by rank, within slot caps."""
     chosen, seen = [], set()
-    # must-cover first
+
+    def take(c):
+        chosen.append(c)
+        seen.add(c.id)
+
+    # the day's biggest stories (already in rank order) — never miss them
+    for c in ranked:
+        if len(chosen) >= slots:
+            break
+        if c.id in guaranteed and c.id not in seen:
+            take(c)
+    # must-cover topics
     for c in ranked:
         if len(chosen) >= slots:
             break
         if must_cover & set(c.topics) and c.id not in seen:
-            chosen.append(c)
-            seen.add(c.id)
+            take(c)
     # then top-ranked to fill remaining slots
     for c in ranked:
         if len(chosen) >= slots:
             break
         if c.id not in seen:
-            chosen.append(c)
-            seen.add(c.id)
-    return chosen
+            take(c)
+    # keep overall rank order so the highest-scored leads
+    return sorted(chosen, key=lambda c: c.score or 0, reverse=True)

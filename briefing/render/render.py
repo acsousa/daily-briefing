@@ -50,7 +50,9 @@ VOICES, _RENDER = _config()
 RATE = _RENDER.get("rate", "+0%")
 TURN_GAP = float(_RENDER.get("gap_seconds", 0.40))
 SEGMENT_GAP = float(_RENDER.get("segment_gap_seconds", 0.7))
-STING = _RENDER.get("sting", "generated")
+STING = _RENDER.get("sting", "generated")      # path to an audio file, "generated", or "none"
+INTRO = _RENDER.get("intro", "generated")      # intro bumper before content: path/"generated"/"none"
+ASSETS = REPO_ROOT / "briefings" / "assets"
 
 
 def parse_turns(text):
@@ -112,6 +114,51 @@ def _make_sting(path, motif, td, key):
          "-q:a", "9", str(path)])
 
 
+def _resolve_asset(value, td, generated_name):
+    """Resolve a config audio value: 'none' -> None, 'generated' -> synth, else a path.
+
+    A path may be absolute or relative to briefings/assets/. Provided files are
+    re-encoded to the mono/24k mp3 the concat step needs.
+    """
+    if not value or value == "none":
+        return None
+    if value == "generated":
+        out = td / generated_name
+        if generated_name == "intro.mp3":
+            _make_intro(out, td)
+        else:
+            _make_sting(out, STING_MOTIFS[0], td, "x")
+        return out
+    src = Path(value)
+    if not src.is_absolute():
+        src = ASSETS / value
+    if not src.exists():
+        print(f"  ! audio asset not found: {src} — skipping")
+        return None
+    out = td / generated_name
+    run(["ffmpeg", "-y", "-i", str(src), "-ac", "1", "-ar", "24000", "-q:a", "9", str(out)])
+    return out
+
+
+def _make_intro(path, td):
+    """Generated intro bumper (fuller, ~4s) used until a real track is supplied."""
+    notes = []
+    motif = [392.00, 523.25, 659.25, 783.99, 1046.50]   # G C E G C — rising
+    for j, freq in enumerate(motif):
+        n = td / f"intro_{j}.mp3"
+        dur = 0.7 if j == len(motif) - 1 else 0.32
+        run(["ffmpeg", "-y", "-f", "lavfi", "-i",
+             f"aevalsrc=0.5*sin(2*PI*{freq}*t)*exp(-2.2*t)+0.25*sin(2*PI*{2*freq}*t)*exp(-3.5*t)"
+             f"+0.15*sin(2*PI*{freq/2}*t)*exp(-1.5*t):d={dur}:s=24000", "-q:a", "9", str(n)])
+        notes.append(n)
+    lst = td / "intro.txt"
+    lst.write_text("".join(f"file '{p}'\n" for p in notes))
+    run(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(lst),
+         "-af", "aecho=0.8:0.7:110:0.4,volume=0.4,apad=pad_dur=0.7,"
+                "aformat=channel_layouts=mono:sample_rates=24000",
+         "-q:a", "9", str(path)])
+
+
 def main():
     turns = parse_turns((BRIEFINGS_DIR / SCRIPT_FILE).read_text())
     if not turns:
@@ -126,16 +173,20 @@ def main():
         _silence(seg_gap, SEGMENT_GAP)
 
         stings = []                                  # rotated across boundaries
-        if STING and STING != "none":
-            if STING == "generated":
-                for i, motif in enumerate(STING_MOTIFS):
-                    s = td / f"sting_{i}.mp3"
-                    _make_sting(s, motif, td, i)
-                    stings.append(s)
-            else:
-                stings = [Path(STING)]               # a single provided audio file
+        if STING == "generated":
+            for i, motif in enumerate(STING_MOTIFS):
+                s = td / f"sting_{i}.mp3"
+                _make_sting(s, motif, td, i)
+                stings.append(s)
+        elif STING and STING != "none":
+            one = _resolve_asset(STING, td, "sting.mp3")  # a provided audio file
+            if one:
+                stings = [one]
 
+        intro = _resolve_asset(INTRO, td, "intro.mp3")
         clips, boundary = [], 0
+        if intro:                                    # intro bumper, then a beat, then content
+            clips.extend([intro, seg_gap])
         for i, t in enumerate(turns):
             if i > 0:
                 if t["seg_break"]:

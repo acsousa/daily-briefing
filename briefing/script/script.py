@@ -1,7 +1,11 @@
-"""Scriptwriter: render the editorial brief into grounded two-host dialogue.
+"""Scriptwriter: render the editor's BEATS into tight two-host news dialogue.
 
-Output is the existing AVA:/ANDREW: tagged format the renderer consumes. Segments are
-separated by a blank line so the renderer inserts a longer pause + sting between them.
+This is a NEWS briefing first, podcast second. Each story is rendered by walking the beats
+in order — hook, headline, what happened, why it matters, bridge — so the listener actually
+gets the news. Heavy editing: fast back-and-forth, no filler affirmations.
+
+Output is the AVA:/ANDREW: tagged format the renderer consumes; segments are separated by a
+[[SEG]] marker.
 """
 from __future__ import annotations
 
@@ -9,30 +13,23 @@ from datetime import date
 
 from ..store import EpisodeSegment, SourceAttribution
 
-_SYSTEM = """You write a two-host audio briefing in the style of Marketplace (Kai Ryssdal):
-conversational business journalism, not finance-bro analysis. AVA anchors (leads, frames,
-reads the through-line); ANDREW is the analyst (connects, questions, the occasional dry aside).
+_SYSTEM = """You write a daily two-host NEWS briefing (AVA anchors, ANDREW analyzes), in the
+accessible style of Marketplace. NEWS FIRST, style second: the listener must come away
+actually knowing what happened.
 
-Output ONLY dialogue lines, each starting with `AVA:` or `ANDREW:` — one speaker per line,
-alternating naturally. No stage directions, no markdown, no headers.
+Output ONLY dialogue lines, each starting with `AVA:` or `ANDREW:` — one speaker per line.
+No stage directions, no markdown, no headers.
 
-Voice (read carefully):
-- Translate the news into EVERYDAY CONSEQUENCES — what it means for real decisions and lives
-  (who hires, who buys, who waits), not abstract metrics. Keep the core fact/number visible
-  but lose the jargon. Assume a smart listener with no finance background.
-- Open a story by surfacing its TENSION or CONTRADICTION, then explain the hidden mechanism
-  underneath ("X looks strong, but here's what's really going on"). That hook is the spine.
-- Tone: wry, lightly skeptical, warm — never finance-bro, never judgmental of people. A
-  familiar phrase with a twist is welcome, used sparingly and never forced.
-- Market reaction is a passing NOTE, not the focus. Do NOT roll through tickers and
-  percentages. If a price move matters, one short clause, then move on.
-- Begin each story with a brief, natural verbal hand-off from the previous topic (one line).
-- Keep fact separate from analysis; frame forward-looking questions as open questions, never
-  as sourced fact. Invent nothing — every claim traces to the provided sources.
-
-Length discipline is REQUIRED. Stay within the stated word target. Quick-hit segments must
-stay tight — make the point and get out; do not over-explain or go deep on secondary detail.
-Match the requested tone."""
+Hard rules:
+- DELIVER THE NEWS. State the headline plainly, then the concrete facts — who, what, the key
+  numbers and names. Do NOT circle the story with analysis while never saying what happened.
+- HEAVY EDITING, FAST PACING. This is a briefing, not a podcast chat. Every line advances the
+  story. Cut filler — never write a line that is just agreement ("Right.", "Exactly.",
+  "Interesting."). If a host speaks, they add a fact, a stake, or a turn.
+- Market reactions are a footnote — one short clause at most, never a ticker roll-call.
+- Keep fact separate from analysis; frame any forward question as an open question. Invent
+  nothing — every claim traces to the provided sources.
+Match the requested tone. Stay within the stated word target."""
 
 
 def _attr(cluster, articles_by_id):
@@ -55,11 +52,10 @@ def _sources_block(cluster, articles_by_id, fulltext_by_id) -> str:
 
 
 def _words_for(seconds: int) -> int:
-    return int(seconds / 60 * 150)   # ~150 wpm at the slower pace
+    return int(seconds / 60 * 150)
 
 
 def _max_tokens(words: int) -> int:
-    # generous headroom so a segment never truncates mid-sentence (~1.4 tokens/word)
     return max(int(words * 3), 1200)
 
 
@@ -70,54 +66,54 @@ def write_script(llm, plan, editor_output, clusters_by_id, articles_by_id,
     briefs = {b.story_cluster_id: b for b in editor_output.segments}
     pretty_date = today.strftime("%A, %B %-d")
 
-    parts = []                        # (text, break_before)
-    episode_segments: list[EpisodeSegment] = []
-    briefed: list = []
+    parts, episode_segments, briefed = [], [], []
     seen_headline = False
 
     for seg in plan.segments:
         words = _words_for(seg.allotted_sec)
+        mt = _max_tokens(words)
         if seg.kind == "intro":
             user = (f"Tone: {tone}\nWrite a {words}-word two-host cold open for {pretty_date}. "
-                    "Marketplace-style: open on a tension or contradiction (or a striking, "
-                    "plain-language framing), then promise to explain what's underneath. "
-                    f"Set up the day's through-line: \"{editor_output.through_line}\". "
-                    "Warm, brisk, no fabricated details.")
-            script, attrs, brk = llm.complete(_SYSTEM, user, model=model, max_tokens=_max_tokens(words)), [], False
+                    "Open on the day's tension, then preview what's coming in one or two lines. "
+                    f"Through-line: \"{editor_output.through_line}\". Brisk, no fabricated details.")
+            script, attrs, brk = llm.complete(_SYSTEM, user, model=model, max_tokens=mt), [], False
         elif seg.kind == "weather" and weather:
             user = (f"Tone: {tone}\nWrite at most 2 short lines of two-host weather for "
                     f"{profile.get('owner', {}).get('location', {}).get('city', 'today')}: "
                     f"{weather['conditions']}, high {weather['high_f']}F, low {weather['low_f']}F, "
-                    f"{weather['precip_pct']}% precip. Plain and quick — no flowery description. "
-                    "Use only these numbers.")
-            script, attrs, brk = llm.complete(_SYSTEM, user, model=model, max_tokens=_max_tokens(words)), [], False
+                    f"{weather['precip_pct']}% precip. Plain and quick. Use only these numbers.")
+            script, attrs, brk = llm.complete(_SYSTEM, user, model=model, max_tokens=mt), [], False
         elif seg.kind == "outro":
-            user = (f"Tone: {tone}\nWrite a short {words}-word two-host sign-off, Marketplace-"
-                    "style: concise, a touch wry, reinforcing that every story had an economic "
-                    "or strategic angle. No new facts.")
-            script, attrs, brk = llm.complete(_SYSTEM, user, model=model, max_tokens=_max_tokens(words)), [], True
+            user = (f"Tone: {tone}\nWrite a short {words}-word two-host sign-off — concise, a "
+                    "touch wry, reinforcing the through-line. No new facts.")
+            script, attrs, brk = llm.complete(_SYSTEM, user, model=model, max_tokens=mt), [], True
         else:  # headline
             c = clusters_by_id[seg.story_cluster_id]
             b = briefs.get(c.id)
             is_lead = not seen_headline
             seen_headline = True
-            depth = ("This is the LEAD story — give it room for real analysis."
-                     if is_lead else
-                     "This is a QUICK HIT — tight and punchy, one clear point, then move on.")
-            brief_txt = ""
+            depth = ("LEAD story — give the news room, then a beat of analysis."
+                     if is_lead else "QUICK HIT — deliver it fast and move on.")
+            beats = ""
             if b:
-                brief_txt = (f"Angle: {b.angle}\nWhy it matters: {b.why_it_matters}\n"
-                             f"Connections: {b.connections}\nForward question: {b.forward_question}\n"
-                             f"Aside (optional): {b.joke}\nRecap (developing): {b.recap_line}\n")
-            user = (f"Tone: {tone}\nTarget length: ~{words} words. {depth}\n\n"
-                    f"Editorial brief:\n{brief_txt}\n"
-                    f"Source material (ground every claim in this; focus on the substance, "
-                    f"not market moves):\n{_sources_block(c, articles_by_id, fulltext_by_id)}\n\n"
-                    "Write the two-host segment now, opening with a one-line hand-off.")
-            script = llm.complete(_SYSTEM, user, model=model, max_tokens=_max_tokens(words))
+                beats = (f"Hook: {b.hook}\nHeadline: {b.headline}\n"
+                         f"What happened (DELIVER THIS): {b.what_happened}\n"
+                         f"Why it matters: {b.why_it_matters}\nBridge: {b.bridge}\n"
+                         f"Recap (developing): {b.recap_line}\n")
+            user = (
+                f"Tone: {tone}\nTarget length: ~{words} words. {depth}\n\n"
+                "Render this story by walking the beats IN ORDER — hook, then headline, then "
+                "what-happened (state the actual news and numbers), then why-it-matters, then "
+                "bridge. Fast two-host exchange, no filler lines.\n\n"
+                f"Beats:\n{beats}\n"
+                f"Source material (ground every fact in this):\n"
+                f"{_sources_block(c, articles_by_id, fulltext_by_id)}\n\n"
+                "Write the segment now."
+            )
+            script = llm.complete(_SYSTEM, user, model=model, max_tokens=mt)
             attrs = _attr(c, articles_by_id)
             brk = True
-            briefed.append((c, (b.why_it_matters if b else c.title)))
+            briefed.append((c, (b.headline if b else c.title)))
 
         parts.append((script.strip(), brk))
         episode_segments.append(EpisodeSegment(
@@ -130,13 +126,9 @@ def write_script(llm, plan, editor_output, clusters_by_id, articles_by_id,
             source_attributions=attrs,
         ))
 
-    # assemble: an explicit [[SEG]] marker before break segments (the renderer puts a
-    # longer pause + sting there). Plain newline where segments should flow together.
-    # A sentinel is used rather than a blank line because the model double-spaces turns.
     chunks = []
     for i, (text, brk) in enumerate(parts):
         if i > 0:
             chunks.append("\n[[SEG]]\n" if brk else "\n")
         chunks.append(text)
-    briefing_text = "".join(chunks) + "\n"
-    return briefing_text, episode_segments, briefed
+    return "".join(chunks) + "\n", episode_segments, briefed

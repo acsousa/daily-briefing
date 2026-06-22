@@ -1,7 +1,9 @@
-"""Group RawArticles into StoryClusters by title/entity overlap (rule-based).
+"""Group RawArticles into StoryClusters by title + entity overlap (rule-based).
 
-A hook for embedding similarity can replace `_similar` later without changing the
-interface.
+Cross-source merging matters for salience: when many outlets cover the same event, those
+articles must land in one cluster so coverage volume (distinct sources) is measurable. We
+merge on token overlap OR shared named entities, so differently-worded headlines about the
+same story still join.
 """
 from __future__ import annotations
 
@@ -10,24 +12,31 @@ import hashlib
 from ..store import StoryCluster
 from ..text import entities, jaccard, tokens
 
-SIMILARITY_THRESHOLD = 0.34
+TOKEN_THRESHOLD = 0.28          # strong title-wording overlap
+SOFT_TOKEN_THRESHOLD = 0.15     # weaker wording overlap, needs entity backing
+SHARED_ENTITIES = 2             # this many shared proper nouns merges differently-worded heds
 
 
-def _similar(a_tokens: set[str], b_tokens: set[str]) -> bool:
-    return jaccard(a_tokens, b_tokens) >= SIMILARITY_THRESHOLD
+def _matches(group, tok, ents) -> bool:
+    j = jaccard(tok, group["tokens"])
+    if j >= TOKEN_THRESHOLD:
+        return True
+    return j >= SOFT_TOKEN_THRESHOLD and len(ents & group["entities"]) >= SHARED_ENTITIES
 
 
 def cluster_articles(articles) -> list[StoryCluster]:
     groups: list[dict] = []
     for art in articles:
         tok = tokens(art.title)
+        ents = set(entities(art.title))
         for g in groups:
-            if _similar(tok, g["tokens"]):
+            if _matches(g, tok, ents):
                 g["articles"].append(art)
                 g["tokens"] |= tok
+                g["entities"] |= ents
                 break
         else:
-            groups.append({"articles": [art], "tokens": set(tok)})
+            groups.append({"articles": [art], "tokens": set(tok), "entities": set(ents)})
     return [_to_cluster(g["articles"]) for g in groups]
 
 
@@ -36,6 +45,7 @@ def _to_cluster(arts) -> StoryCluster:
     rep = max(arts, key=lambda a: len(a.title))          # fullest headline
     topics = sorted({t for a in arts for t in a.topics})
     ents = entities(" . ".join(a.title for a in arts))
+    sources = {a.source_id for a in arts}
     cid = hashlib.sha256("|".join(sorted(a.id for a in arts)).encode()).hexdigest()[:16]
     return StoryCluster(
         id=cid,
@@ -43,6 +53,7 @@ def _to_cluster(arts) -> StoryCluster:
         article_ids=[a.id for a in arts],
         topics=topics,
         entities=ents,
+        source_count=len(sources),
         first_seen=min(a.published_at for a in arts),
         last_updated=max(a.published_at for a in arts),
         score_components={},

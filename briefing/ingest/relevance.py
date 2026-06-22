@@ -1,23 +1,10 @@
-"""Keep only articles relevant to the active user profile.
+"""Drop only what the user wants to avoid; keep everything else.
 
-An article is relevant if its source topics intersect the profile's active topics
-(weight > 0) OR an interest keyword appears in its title/summary. Anything matching
-the `avoid` list (by text or source topic) is dropped first. Kept articles are
-retagged with the matched profile topics for downstream clustering/ranking.
+Interest/region targeting happens later, in ranking and selection — NOT here — so the
+day's biggest stories survive ingestion even if they don't match an interest topic (they
+get surfaced by coverage salience). Only the `avoid` list removes articles outright.
 """
 from __future__ import annotations
-
-
-def _active_topics(profile: dict) -> set[str]:
-    return {i["topic"] for i in profile.get("interests", []) if i.get("weight", 0) > 0}
-
-
-def _keyword_topics(profile: dict):
-    return [
-        (i["topic"], [k.lower() for k in i.get("keywords", [])])
-        for i in profile.get("interests", [])
-        if i.get("weight", 0) > 0
-    ]
 
 
 def _is_avoided(article, avoid: list[str]) -> bool:
@@ -27,19 +14,6 @@ def _is_avoided(article, avoid: list[str]) -> bool:
 
 
 def filter_relevant(articles, profile: dict):
+    """Keep articles not matching the profile's avoid list (source topics preserved)."""
     avoid = [a.lower() for a in profile.get("avoid", [])]
-    active = _active_topics(profile)
-    keyword_topics = _keyword_topics(profile)
-    kept = []
-    for a in articles:
-        if _is_avoided(a, avoid):
-            continue
-        text = f"{a.title} {a.summary or ''}".lower()
-        matched = {t for t in a.topics if t in active}
-        for topic, keywords in keyword_topics:
-            if any(kw in text for kw in keywords):
-                matched.add(topic)
-        if matched:
-            a.topics = sorted(matched)
-            kept.append(a)
-    return kept
+    return [a for a in articles if not _is_avoided(a, avoid)]

@@ -19,8 +19,9 @@ interests:
   - { topic: world,      weight: 0.6, keywords: [] }
   - { topic: health,     weight: 0.4, keywords: [] }
 
+regions: [U.S.]                      # geographic focus (boosts ranking): U.S./Europe/Canada/South America/Asia
 must_cover: []                       # topics to always include if anything qualifies
-avoid: []                            # topics/keywords to de-prioritize or skip
+avoid: []                            # topics/keywords to drop outright
 limits: { max_world_headlines: 2, max_segments: 8 }
 
 style:
