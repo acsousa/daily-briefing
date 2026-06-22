@@ -5,6 +5,8 @@ from datetime import datetime, timezone
 
 DEFAULT_WEIGHTS = {"freshness": 0.22, "importance": 0.28, "interest": 0.30,
                    "region": 0.12, "novelty": 0.08}
+OFF_FOCUS_DAMP = 0.7       # soft de-emphasis for stories outside the user's interests
+                          # (not avoided — they can still surface if genuinely dominant)
 
 # Coarse region keyword signals — used only to nudge ranking, not to hard-filter.
 REGION_TERMS = {
@@ -64,6 +66,9 @@ def rank_clusters(clusters, profile, weights=None, novelty_by_cluster=None, now=
             "region": _region(c, profile),
             "novelty": novelty_by_cluster.get(c.id, 1.0),
         }
-        c.score = sum(w.get(k, 0.0) * v for k, v in comp.items())
+        score = sum(w.get(k, 0.0) * v for k, v in comp.items())
+        if comp["interest"] == 0.0:           # outside your focus → softly de-emphasized
+            score *= OFF_FOCUS_DAMP
+        c.score = score
         c.score_components = comp
     return sorted(clusters, key=lambda c: c.score or 0.0, reverse=True)
