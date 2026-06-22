@@ -5,8 +5,6 @@ from datetime import datetime, timezone
 
 DEFAULT_WEIGHTS = {"freshness": 0.22, "importance": 0.28, "interest": 0.30,
                    "region": 0.12, "novelty": 0.08}
-OFF_FOCUS_DAMP = 0.7       # soft de-emphasis for stories outside the user's interests
-                          # (not avoided — they can still surface if genuinely dominant)
 
 # Coarse region keyword signals — used only to nudge ranking, not to hard-filter.
 REGION_TERMS = {
@@ -32,21 +30,10 @@ def _importance(cluster) -> float:
     return min(cluster.source_count / 3.0, 1.0)
 
 
-# Content markers for clearly sports/entertainment stories — treated as off-focus even when
-# a general-news outlet tagged them "world" (so World Cup doesn't ride the "world" interest).
-SOFT_OFFFOCUS_TERMS = (
-    "world cup", "soccer", "fifa", "olympic", "premier league", "la liga", "champions league",
-    "nba", "nfl", "mlb", "nhl", "grand slam", "wimbledon", "super bowl", "playoff",
-    "box office", "red carpet", "oscars", "grammys", "celebrity", "movie premiere",
-)
-
-
 def _interest(cluster, profile) -> float:
-    text = f"{cluster.title} {cluster.summary or ''}".lower()
-    if any(term in text for term in SOFT_OFFFOCUS_TERMS):
-        return 0.0                                        # off-focus → damped (not avoided)
     weights = {i["topic"]: i.get("weight", 0.0) for i in profile.get("interests", [])}
     best = max((weights.get(t, 0.0) for t in cluster.topics), default=0.0)
+    text = f"{cluster.title} {cluster.summary or ''}".lower()
     for i in profile.get("interests", []):                # keyword match can raise it
         w = i.get("weight", 0.0)
         if w > best and any(k.lower() in text for k in i.get("keywords", [])):
@@ -77,9 +64,6 @@ def rank_clusters(clusters, profile, weights=None, novelty_by_cluster=None, now=
             "region": _region(c, profile),
             "novelty": novelty_by_cluster.get(c.id, 1.0),
         }
-        score = sum(w.get(k, 0.0) * v for k, v in comp.items())
-        if comp["interest"] == 0.0:           # outside your focus → softly de-emphasized
-            score *= OFF_FOCUS_DAMP
-        c.score = score
+        c.score = sum(w.get(k, 0.0) * v for k, v in comp.items())
         c.score_components = comp
     return sorted(clusters, key=lambda c: c.score or 0.0, reverse=True)

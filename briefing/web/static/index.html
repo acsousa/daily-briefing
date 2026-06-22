@@ -182,7 +182,7 @@ function toneLabel(t){ return t<33?'ANALYTICAL':t<66?'BALANCED':'PLAYFUL'; }
 function snapLength(v){ const n=Math.round((+v||10)/5)*5; return Math.min(30,Math.max(5,n)); }
 function lenPct(v){ return (v-5)/25*100; }
 function timeDisplay(v){ const t=TIMES.find(x=>x.val===v); return t?t.sub:v; }
-function voiceName(id){ const v=VOICES.find(x=>x.id===id); return v?v.name:(id||'').toUpperCase(); }
+function voiceName(id){ const v=VOICES.find(x=>x.id===id); return v?v.name:(id||'').replace(/_/g,' & ').toUpperCase(); }
 
 function tag(text, kind, idx){
   const col = kind==='avoid' ? '224,122,122' : kind==='region' ? '34,211,238' : '52,211,153';

@@ -31,10 +31,8 @@ def build_plan(ranked_clusters, profile, config, *, has_weather: bool, today: da
     body_budget = max(target_sec - fixed, QUICKHIT_MIN_SEC)
     body_slots = max(max_segments - len(segments) - 1, 1)
 
-    # never miss the biggest RELEVANT stories: guarantee top coverage among in-focus stories
-    # (off-interest stories are not force-included — they can still rank in on their own)
-    in_focus = [c for c in ranked_clusters if c.score_components.get("interest", 0) > 0]
-    biggest = sorted(in_focus, key=lambda c: (c.source_count, c.score or 0), reverse=True)
+    # never miss the day's biggest stories: guarantee the top few by coverage salience
+    biggest = sorted(ranked_clusters, key=lambda c: (c.source_count, c.score or 0), reverse=True)
     guaranteed = {c.id for c in biggest[:TOP_SALIENT] if c.source_count >= 2}
     selected = _select(ranked_clusters, body_slots, body_budget, must_cover, guaranteed)
     if selected:
