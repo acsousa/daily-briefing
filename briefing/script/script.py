@@ -73,10 +73,18 @@ def write_script(llm, plan, editor_output, clusters_by_id, articles_by_id,
         words = _words_for(seg.allotted_sec)
         mt = _max_tokens(words)
         if seg.kind == "intro":
-            user = (f"Tone: {tone}\nWrite a {words}-word two-host cold open for {pretty_date}. "
-                    "Open on the day's tension, then preview what's coming in one or two lines. "
-                    f"Through-line: \"{editor_output.through_line}\". Brisk, no fabricated details.")
-            script, attrs, brk = llm.complete(_SYSTEM, user, model=model, max_tokens=mt), [], False
+            owner_name = ((profile.get("owner") or {}).get("name") or "").split()
+            first = owner_name[0] if owner_name else ""
+            welcome = (f"{first}, welcome to your daily briefing." if first
+                       else "Welcome to your daily briefing.")
+            user = (f"Tone: {tone}\nThe opening line is already written: 'AVA: {welcome}'. "
+                    f"Continue a {words}-word two-host cold open from there — do NOT greet or "
+                    "welcome again. Go straight into the day's tension, then preview what's coming "
+                    f"in a line or two. It's {pretty_date}. Through-line: "
+                    f"\"{editor_output.through_line}\". Brisk, no fabricated details. "
+                    "Start your output with an ANDREW line (AVA just spoke the welcome).")
+            body = llm.complete(_SYSTEM, user, model=model, max_tokens=mt)
+            script, attrs, brk = f"AVA: {welcome}\n{body}", [], False
         elif seg.kind == "weather" and weather:
             user = (f"Tone: {tone}\nWrite at most 2 short lines of two-host weather for "
                     f"{profile.get('owner', {}).get('location', {}).get('city', 'today')}: "

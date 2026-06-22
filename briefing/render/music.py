@@ -84,12 +84,13 @@ class MusicEngine:
 
 
 def extract(cue, out_path) -> None:
-    """Render a cue (track, start, dur) to a mono 44.1k mp3 with fades + leveling."""
+    """Render a cue (track, start, dur) to a mono 44.1k mp3 with a gentle, gradual fade-out."""
     track, start, dur = cue
-    fout = min(0.8, dur * 0.3)
+    fin = 0.6
+    fout = min(3.5, max(dur * 0.5, 1.5))       # long, gradual tail
     subprocess.run(
         ["ffmpeg", "-y", "-ss", str(start), "-t", str(dur), "-i", str(track),
-         "-af", f"afade=t=in:st=0:d=0.5,afade=t=out:st={max(dur - fout, 0):.2f}:d={fout:.2f},"
+         "-af", f"afade=t=in:st=0:d={fin},afade=t=out:st={max(dur - fout, 0):.2f}:d={fout:.2f},"
                 "dynaudnorm=p=0.6,volume=0.9,aformat=channel_layouts=mono:sample_rates=44100",
          "-ac", "1", "-ar", "44100", "-q:a", "4", str(out_path)],
         check=True, capture_output=True)
