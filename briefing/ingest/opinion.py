@@ -20,12 +20,18 @@ _URL_MARKERS = ("/opinion/", "/advice/", "/columnist", "/columns/", "/voices/",
                 "moneyist", "/perspective/", "/commentary/")
 
 
+def _norm(s: str) -> str:
+    # straighten curly quotes so "I'm 60" matches "i'm 6"
+    return (s or "").replace("’", "'").replace("‘", "'").replace("“", '"').replace("”", '"')
+
+
 def is_opinion(article) -> bool:
-    title = article.title or ""
+    title = _norm(article.title or "")
     text = title.lower()
     url = (article.canonical_url or article.url or "").lower()
     if any(m in url for m in _URL_MARKERS):
         return True
-    if _FIRST_PERSON.match(title):
+    head = re.sub(r"^[\s\"'`]+", "", title)        # ignore a leading quote on quoted heds
+    if _FIRST_PERSON.match(head):
         return True
     return any(term in text for term in _ADVICE_TERMS)

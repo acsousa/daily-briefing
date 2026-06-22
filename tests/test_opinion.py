@@ -12,6 +12,8 @@ def test_drops_advice_and_opinion():
     assert is_opinion(_a("My husband wants to hide money from me. What should I do?"))
     assert is_opinion(_a("The Moneyist: I lent my brother $5,000 and he won't pay it back"))
     assert is_opinion(_a("Breaking news", url="https://wsj.com/opinion/a-hot-take"))
+    # curly-quoted first-person advice column (MarketWatch style)
+    assert is_opinion(_a("‘I’ll probably be working until I die’: I’m 60, wait tables and have $40k saved"))
 
 
 def test_keeps_real_news():
