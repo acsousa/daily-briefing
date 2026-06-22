@@ -7,6 +7,8 @@ weather, etc.) rather than replacing them. Launch with `brief config`.
 from __future__ import annotations
 
 import json
+import urllib.parse
+import urllib.request
 import webbrowser
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
@@ -21,16 +23,35 @@ STATIC = Path(__file__).resolve().parent / "static"
 TAXONOMY = ["technology", "defense", "robotics", "business", "science", "health",
             "world", "politics", "sports", "entertainment", "local"]
 
+# Region-of-focus suggestions (multi-select). Default is U.S.
+REGIONS = ["U.S.", "Europe", "Canada", "South America", "Asia"]
+
+
+def _geocode(place: str):
+    """Open-Meteo geocoding (no key) -> (lat, lon, city, state) or None."""
+    if not place.strip():
+        return None
+    try:
+        q = urllib.parse.urlencode({"name": place.split(",")[0].strip(), "count": 1})
+        with urllib.request.urlopen(
+                f"https://geocoding-api.open-meteo.com/v1/search?{q}", timeout=8) as r:
+            res = (json.loads(r.read()).get("results") or [None])[0]
+        if res:
+            return res["latitude"], res["longitude"], res.get("name", ""), res.get("admin1", "")
+    except Exception:
+        return None
+    return None
+
 # Dual-host voice pairs (female anchor + male analyst) behind the design's voice cards.
 # `ava`/`andrew` are the edge-tts voices for the AVA-role and ANDREW-role script tags.
 VOICE_OPTIONS = [
-    {"id": "ava_andrew", "name": "AVA & ANDREW", "desc": "Expressive ♀ · Warm ♂",
+    {"id": "ava_andrew", "name": "AVA & ANDREW", "desc": "Ava ♀ expressive · Andrew ♂ warm",
      "ava": "en-US-AvaNeural", "andrew": "en-US-AndrewNeural"},
-    {"id": "aria_guy", "name": "ARIA & GUY", "desc": "Crisp ♀ · Easy ♂",
+    {"id": "aria_guy", "name": "ARIA & GUY", "desc": "Aria ♀ crisp · Guy ♂ easy",
      "ava": "en-US-AriaNeural", "andrew": "en-US-GuyNeural"},
-    {"id": "jenny_brian", "name": "JENNY & BRIAN", "desc": "Warm ♀ · Mellow ♂",
+    {"id": "jenny_brian", "name": "JENNY & BRIAN", "desc": "Jenny ♀ warm · Brian ♂ mellow",
      "ava": "en-US-JennyNeural", "andrew": "en-US-BrianNeural"},
-    {"id": "emma_eric", "name": "EMMA & ERIC", "desc": "Bright ♀ · Calm ♂",
+    {"id": "emma_eric", "name": "EMMA & ERIC", "desc": "Emma ♀ bright · Eric ♂ calm",
      "ava": "en-US-EmmaNeural", "andrew": "en-US-EricNeural"},
 ]
 _DEFAULT_PAIR = VOICE_OPTIONS[0]
@@ -65,11 +86,20 @@ def _tone_label(t: int) -> str:
     return "ANALYTICAL" if t < 33 else "BALANCED" if t < 66 else "PLAYFUL"
 
 
+def _location_str(owner: dict) -> str:
+    loc = owner.get("location") or {}
+    parts = [loc.get("city", ""), loc.get("state", "")]
+    return ", ".join(p for p in parts if p)
+
+
 def yaml_to_form(profile: dict, config: dict) -> dict:
     """Project the current YAML into the form's value shape (for prefill)."""
     style = profile.get("style") or {}
+    owner = profile.get("owner") or {}
     return {
-        "name": (profile.get("owner") or {}).get("name", ""),
+        "name": owner.get("name", ""),
+        "location": _location_str(owner),
+        "regions": list(profile.get("regions") or ["U.S."]),
         "topics": [i["topic"] for i in profile.get("interests", []) if isinstance(i, dict) and "topic" in i],
         "length": int((config.get("episode") or {}).get("target_duration_minutes", 10)),
         "time": (config.get("schedule") or {}).get("drop_time", "08:00"),
@@ -87,7 +117,23 @@ def form_to_yaml(form: dict, profile: dict, config: dict) -> tuple[dict, dict]:
 
     owner = dict(profile.get("owner") or {})
     owner["name"] = (form.get("name") or "").strip()
+    location = (form.get("location") or "").strip()
+    if location:
+        geo = _geocode(location)
+        if geo:
+            lat, lon, city, admin = geo
+            owner["location"] = {"city": city or location, "state": admin,
+                                 "timezone": (owner.get("location") or {}).get("timezone", "America/New_York")}
+            weather = dict(config.get("weather") or {})
+            weather["latitude"] = round(lat, 4)
+            weather["longitude"] = round(lon, 4)
+            config["weather"] = weather
+        else:                                    # keep coords; record the text the user gave
+            loc = dict(owner.get("location") or {})
+            loc["city"] = location.split(",")[0].strip()
+            owner["location"] = loc
     profile["owner"] = owner
+    profile["regions"] = list(form.get("regions") or ["U.S."])
 
     existing = {i.get("topic"): i for i in profile.get("interests", []) if isinstance(i, dict)}
     interests = []
@@ -145,7 +191,8 @@ class Handler(BaseHTTPRequestHandler):
         elif self.path == "/api/config":
             self._send(200, json.dumps(yaml_to_form(_read_yaml("profile"), _read_yaml("config"))))
         elif self.path == "/api/meta":
-            self._send(200, json.dumps({"suggested": TAXONOMY, "voices": VOICE_OPTIONS}))
+            self._send(200, json.dumps({"suggested": TAXONOMY, "voices": VOICE_OPTIONS,
+                                        "regions": REGIONS}))
         else:
             self._send(404, '{"error":"not found"}')
 

@@ -80,9 +80,15 @@
 
       <!-- right fields -->
       <div style="padding:26px 30px;display:flex;flex-direction:column;gap:24px;">
-        <div>
-          <div class="lbl">┌─ IDENTIFY ──────</div>
-          <input id="name" class="txt" placeholder="Listener name"/>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+          <div>
+            <div class="lbl">┌─ IDENTIFY ──────</div>
+            <input id="name" class="txt" placeholder="Listener name"/>
+          </div>
+          <div>
+            <div class="lbl">┌─ LOCATION ──────</div>
+            <input id="location" class="txt" placeholder="City, State (e.g. Natick, MA)"/>
+          </div>
         </div>
 
         <div>
@@ -90,6 +96,13 @@
           <div id="topic-chips" style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px;"></div>
           <input id="topic-input" class="txt mono" placeholder="&gt; add vector + Enter" style="margin-bottom:11px;"/>
           <div id="topic-suggest" style="display:flex;flex-wrap:wrap;gap:7px;"></div>
+        </div>
+
+        <div>
+          <div class="lbl">┌─ REGION OF FOCUS ──────</div>
+          <div id="region-chips" style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px;"></div>
+          <input id="region-input" class="txt mono" placeholder="&gt; add region + Enter" style="margin-bottom:11px;"/>
+          <div id="region-suggest" style="display:flex;flex-wrap:wrap;gap:7px;"></div>
         </div>
 
         <div>
@@ -158,9 +171,10 @@
 const TIMES = [{label:'Dawn',sub:'6:00 AM',val:'06:00'},{label:'Commute',sub:'8:00 AM',val:'08:00'},{label:'Midday',sub:'12:00 PM',val:'12:00'},{label:'Evening',sub:'7:00 PM',val:'19:00'}];
 const LEN_STOPS = [5,10,15,20,25,30];
 let SUGGEST = ['technology','defense','robotics','business','science','health','world','politics','sports','entertainment','local'];
-let VOICES = [{id:'ava_andrew',name:'AVA & ANDREW',desc:'Expressive ♀ · Warm ♂'},{id:'aria_guy',name:'ARIA & GUY',desc:'Crisp ♀ · Easy ♂'},{id:'jenny_brian',name:'JENNY & BRIAN',desc:'Warm ♀ · Mellow ♂'},{id:'emma_eric',name:'EMMA & ERIC',desc:'Bright ♀ · Calm ♂'}];
+let REGION_SUGGEST = ['U.S.','Europe','Canada','South America','Asia'];
+let VOICES = [{id:'ava_andrew',name:'AVA & ANDREW',desc:'Ava ♀ expressive · Andrew ♂ warm'},{id:'aria_guy',name:'ARIA & GUY',desc:'Aria ♀ crisp · Guy ♂ easy'},{id:'jenny_brian',name:'JENNY & BRIAN',desc:'Jenny ♀ warm · Brian ♂ mellow'},{id:'emma_eric',name:'EMMA & ERIC',desc:'Emma ♀ bright · Eric ♂ calm'}];
 
-const state = {name:'',topics:['technology','business'],length:10,time:'08:00',voice:'ava_andrew',tone:35,favor:[],avoid:[]};
+const state = {name:'',location:'',topics:['technology','business'],regions:['U.S.'],length:10,time:'08:00',voice:'ava_andrew',tone:35,favor:[],avoid:[]};
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
@@ -171,8 +185,8 @@ function timeDisplay(v){ const t=TIMES.find(x=>x.val===v); return t?t.sub:v; }
 function voiceName(id){ const v=VOICES.find(x=>x.id===id); return v?v.name:(id||'').toUpperCase(); }
 
 function tag(text, kind, idx){
-  const col = kind==='avoid' ? '224,122,122' : '52,211,153';
-  const textCol = kind==='avoid' ? '#f0cccc' : (kind==='topic'?'#c8f7e6':'#bdf2df');
+  const col = kind==='avoid' ? '224,122,122' : kind==='region' ? '34,211,238' : '52,211,153';
+  const textCol = kind==='avoid' ? '#f0cccc' : kind==='region' ? '#cdf3f9' : (kind==='topic'?'#c8f7e6':'#bdf2df');
   const pad = kind==='topic' ? '6px 8px 6px 11px' : '4px 7px 4px 10px';
   const fs = kind==='topic' ? '12px' : '11px';
   return `<span style="display:inline-flex;align-items:center;gap:7px;padding:${pad};border-radius:3px;background:rgba(${col},0.12);border:1px solid rgba(${col},0.4);color:${textCol};font:500 ${fs} 'IBM Plex Mono',monospace;">${esc(text)}<b class="chipx" data-kind="${kind}" data-i="${idx}">×</b></span>`;
@@ -187,10 +201,17 @@ function render(){
   $('r-voice').textContent = voiceName(state.voice);
   $('r-tone').textContent = toneLabel(state.tone);
 
+  $('location').value = state.location;
   $('topic-chips').innerHTML = state.topics.map((t,i)=>tag(t,'topic',i)).join('');
   $('topic-suggest').innerHTML = SUGGEST.map(l=>{
     const sel = state.topics.includes(l);
     return `<div class="opt${sel?' sel':''}" data-act="topic" data-val="${esc(l)}" style="padding:7px 12px;border:1px solid rgba(52,211,153,${sel?0.4:0.16});color:${sel?'#cdeede':'#9fb3ab'};font:500 12px 'IBM Plex Mono',monospace;"><span class="fill" style="background:rgba(52,211,153,0.2);box-shadow:inset 0 0 0 1px #34d399;"></span><span style="position:relative;z-index:1;">${esc(l)}</span></div>`;
+  }).join('');
+
+  $('region-chips').innerHTML = state.regions.map((t,i)=>tag(t,'region',i)).join('');
+  $('region-suggest').innerHTML = REGION_SUGGEST.map(l=>{
+    const sel = state.regions.includes(l);
+    return `<div class="opt${sel?' sel':''}" data-act="region" data-val="${esc(l)}" style="padding:7px 12px;border:1px solid rgba(34,211,238,${sel?0.45:0.16});color:${sel?'#dff8fc':'#8fa6ac'};font:500 12px 'IBM Plex Mono',monospace;"><span class="fill" style="background:rgba(34,211,238,0.16);box-shadow:inset 0 0 0 1px #22d3ee;"></span><span style="position:relative;z-index:1;">${esc(l)}</span></div>`;
   }).join('');
 
   const lp = lenPct(state.length);
@@ -228,6 +249,7 @@ document.addEventListener('click', e=>{
   if(opt){
     const act = opt.dataset.act, val = opt.dataset.val;
     if(act==='topic') state.topics = state.topics.includes(val) ? state.topics.filter(x=>x!==val) : [...state.topics,val];
+    else if(act==='region') state.regions = state.regions.includes(val) ? state.regions.filter(x=>x!==val) : [...state.regions,val];
     else if(act==='time') state.time = val;
     else if(act==='voice') state.voice = val;
     render(); return;
@@ -236,12 +258,14 @@ document.addEventListener('click', e=>{
   if(x){
     const kind=x.dataset.kind, i=+x.dataset.i;
     if(kind==='topic') state.topics = state.topics.filter((_,j)=>j!==i);
+    else if(kind==='region') state.regions = state.regions.filter((_,j)=>j!==i);
     else if(kind==='favor') state.favor = state.favor.filter((_,j)=>j!==i);
     else if(kind==='avoid') state.avoid = state.avoid.filter((_,j)=>j!==i);
     render();
   }
 });
 $('name').addEventListener('input', e=>{ state.name=e.target.value; $('r-name').textContent=state.name||'—'; });
+$('location').addEventListener('input', e=>{ state.location=e.target.value; });
 $('tone').addEventListener('input', e=>{ state.tone=+e.target.value; render(); });
 $('length').addEventListener('input', e=>{ state.length=snapLength(e.target.value); render(); });
 function tagInput(inputId, key){
@@ -252,7 +276,7 @@ function tagInput(inputId, key){
     e.target.value=''; render();
   });
 }
-tagInput('topic-input','topics'); tagInput('favor-input','favor'); tagInput('avoid-input','avoid');
+tagInput('topic-input','topics'); tagInput('region-input','regions'); tagInput('favor-input','favor'); tagInput('avoid-input','avoid');
 
 $('save').addEventListener('click', async ()=>{
   const btn=$('save'); btn.textContent='▶ SAVING…';
@@ -271,13 +295,13 @@ $('save').addEventListener('click', async ()=>{
 
 // load catalogs + current config
 async function load(){
-  try{ const m = await (await fetch('/api/meta')).json(); if(m.suggested) SUGGEST=m.suggested; if(m.voices) VOICES=m.voices; }catch{}
+  try{ const m = await (await fetch('/api/meta')).json(); if(m.suggested) SUGGEST=m.suggested; if(m.voices) VOICES=m.voices; if(m.regions) REGION_SUGGEST=m.regions; }catch{}
   try{
     const c = await (await fetch('/api/config')).json();
     Object.assign(state, {
-      name:c.name||'', topics:c.topics||[], length:snapLength(c.length||10),
-      time:c.time||'08:00', voice:c.voice||VOICES[0].id, tone:+c.tone||35,
-      favor:c.favor||[], avoid:c.avoid||[]
+      name:c.name||'', location:c.location||'', topics:c.topics||[], regions:c.regions||['U.S.'],
+      length:snapLength(c.length||10), time:c.time||'08:00', voice:c.voice||VOICES[0].id,
+      tone:+c.tone||35, favor:c.favor||[], avoid:c.avoid||[]
     });
   }catch{}
   render();
