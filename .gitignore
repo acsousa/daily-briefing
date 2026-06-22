@@ -38,3 +38,6 @@ token.json
 
 # Run logs
 briefings/*.log
+
+# Music assets (user-supplied tracks; large, not part of the repo)
+briefing/assets/

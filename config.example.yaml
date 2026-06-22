@@ -97,7 +97,15 @@ render:
   rate: "+0%"                # natural pace (negative slows further, e.g. "-5%")
   gap_seconds: 0.40          # pause between turns within a segment
   segment_gap_seconds: 0.7   # pause flanking the music sting at segment boundaries
-  # intro/sting accept: "generated" (synth), "none", or a filename in briefings/assets/
-  # (or an absolute path). Drop royalty-free no-lyric tracks there to use real music.
-  intro: generated           # intro bumper before the briefing starts
-  sting: generated           # rotating bumper between segments
+  # Music engine: drop royalty-free no-lyric tracks in `dir`; it cuts a fresh snippet per
+  # segment boundary (and an intro), rotating song/section by date. Falls back to synth
+  # (intro/sting below) if the folder is empty.
+  music:
+    enabled: true
+    dir: briefing/assets     # folder of your music tracks (repo-relative or absolute)
+    min_seconds: 4           # boundary snippet length range (3–20 is reasonable)
+    max_seconds: 14
+    intro_seconds: 12        # intro snippet length
+  # Synth fallback (used when music.enabled is false or the folder is empty):
+  intro: generated           # "generated" | "none" | a file in briefing/assets
+  sting: generated           # "generated" | "none" | a file in briefing/assets

@@ -12,6 +12,7 @@ from .continuity import match_threads, update_threads
 from .editor import edit_rundown
 from .ingest import FeedAdapter, dedupe, filter_relevant
 from .ingest.extract import fetch_fulltext
+from .ingest.opinion import is_opinion
 from .ingest.weather import get_forecast
 from .plan import build_plan
 from .rank import rank_clusters
@@ -38,9 +39,12 @@ def run_ingest(config, profile, store) -> list[RawArticle]:
             continue
         fetched.extend(articles)
     deduped = dedupe(fetched)
-    relevant = filter_relevant(deduped, profile)
+    kept = filter_relevant(deduped, profile)
+    relevant = [a for a in kept if not is_opinion(a)]
+    dropped_opinion = len(kept) - len(relevant)
     store.save_many(relevant)
-    print(f"ingest: fetched {len(fetched)} | deduped {len(deduped)} | relevant {len(relevant)}")
+    print(f"ingest: fetched {len(fetched)} | deduped {len(deduped)} | "
+          f"opinion dropped {dropped_opinion} | relevant {len(relevant)}")
     return relevant
 
 
