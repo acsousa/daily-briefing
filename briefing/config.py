@@ -13,7 +13,7 @@ from pathlib import Path
 
 import yaml
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+from .paths import REPO_ROOT   # re-exported for callers that import it from config
 
 
 def _read(path: Path) -> dict:

@@ -87,7 +87,6 @@ llm:
   default_model: claude-sonnet-4-6
   editor_model: claude-opus-4-8
   script_model: claude-sonnet-4-6     # the briefing copy; bump to claude-opus-4-8 for quality
-  effort: high
 
 voices:
   AVA: en-US-AvaNeural

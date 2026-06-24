@@ -29,7 +29,8 @@ STING_MOTIFS = [
     [392.00, 523.25, 659.25], [659.25, 587.33, 880.00],
 ]
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+from ..paths import REPO_ROOT   # pathlib-only; safe even when config (yaml) isn't importable
+
 BRIEFINGS_DIR = REPO_ROOT / "briefings"
 
 

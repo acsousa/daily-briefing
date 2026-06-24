@@ -7,6 +7,8 @@ weather, etc.) rather than replacing them. Launch with `brief config`.
 from __future__ import annotations
 
 import json
+import os
+import platform
 import urllib.parse
 import urllib.request
 import webbrowser
@@ -86,6 +88,35 @@ def _tone_label(t: int) -> str:
     return "ANALYTICAL" if t < 33 else "BALANCED" if t < 66 else "PLAYFUL"
 
 
+# Model-quality presets (friendly stand-in for the three llm.* model fields).
+QUALITY = {
+    "opus":   {"default_model": "claude-opus-4-8", "editor_model": "claude-opus-4-8", "script_model": "claude-opus-4-8"},
+    "sonnet": {"default_model": "claude-sonnet-4-6", "editor_model": "claude-sonnet-4-6", "script_model": "claude-sonnet-4-6"},
+    "mixed":  {"default_model": "claude-sonnet-4-6", "editor_model": "claude-opus-4-8", "script_model": "claude-sonnet-4-6"},
+}
+QUALITY_OPTIONS = [
+    {"id": "opus", "name": "Highest quality", "desc": "Opus everywhere"},
+    {"id": "mixed", "name": "Balanced", "desc": "Opus editor · Sonnet copy"},
+    {"id": "sonnet", "name": "Economy", "desc": "Sonnet everywhere"},
+]
+
+
+def _quality_of(llm: dict) -> str:
+    models = {llm.get("default_model"), llm.get("editor_model"), llm.get("script_model")}
+    if models == {"claude-opus-4-8"}:
+        return "opus"
+    if models == {"claude-sonnet-4-6"}:
+        return "sonnet"
+    return "mixed"
+
+
+def _raw_text(name: str) -> str:
+    personal = REPO_ROOT / f"{name}.yaml"
+    example = REPO_ROOT / f"{name}.example.yaml"
+    src = personal if personal.exists() else example
+    return src.read_text() if src.exists() else ""
+
+
 def _location_str(owner: dict) -> str:
     loc = owner.get("location") or {}
     parts = [loc.get("city", ""), loc.get("state", "")]
@@ -103,6 +134,8 @@ def yaml_to_form(profile: dict, config: dict) -> dict:
         "topics": [i["topic"] for i in profile.get("interests", []) if isinstance(i, dict) and "topic" in i],
         "length": int((config.get("episode") or {}).get("target_duration_minutes", 10)),
         "time": (config.get("schedule") or {}).get("drop_time", "08:00"),
+        "lead_hours": int((config.get("schedule") or {}).get("lead_hours", 2)),
+        "quality": _quality_of(config.get("llm") or {}),
         "voice": _pair_for(config.get("voices") or {}),
         "tone": int(style.get("playfulness", 35)),
         "favor": list(profile.get("favor", [])),
@@ -159,7 +192,14 @@ def form_to_yaml(form: dict, profile: dict, config: dict) -> tuple[dict, dict]:
 
     schedule = dict(config.get("schedule") or {})
     schedule["drop_time"] = form.get("time", "08:00")
+    schedule["lead_hours"] = int(form.get("lead_hours", schedule.get("lead_hours", 2)))
     config["schedule"] = schedule
+
+    quality = form.get("quality")
+    if quality in QUALITY:
+        llm = dict(config.get("llm") or {})
+        llm.update(QUALITY[quality])
+        config["llm"] = llm
 
     pair = _pair_by_id(form.get("voice") or _DEFAULT_PAIR["id"])
     voices = dict(config.get("voices") or {})
@@ -192,18 +232,31 @@ class Handler(BaseHTTPRequestHandler):
         elif self.path == "/api/config":
             self._send(200, json.dumps(yaml_to_form(_read_yaml("profile"), _read_yaml("config"))))
         elif self.path == "/api/meta":
+            from ..schedule import mechanism
             self._send(200, json.dumps({"suggested": TAXONOMY, "voices": VOICE_OPTIONS,
-                                        "regions": REGIONS}))
+                                        "regions": REGIONS, "quality": QUALITY_OPTIONS,
+                                        "scheduler": mechanism()}))
+        elif self.path == "/api/raw":                # full files, for the advanced editor
+            self._send(200, json.dumps({"profile": _raw_text("profile"),
+                                        "config": _raw_text("config")}))
         else:
             self._send(404, '{"error":"not found"}')
 
     def do_POST(self):
-        if self.path != "/api/config":
-            return self._send(404, '{"error":"not found"}')
         n = int(self.headers.get("Content-Length", 0) or 0)
+        body = self.rfile.read(n) or b"{}"
         try:
-            form = json.loads(self.rfile.read(n) or b"{}")
-            save_form(form)
+            if self.path == "/api/config":
+                save_form(json.loads(body))
+            elif self.path == "/api/raw":
+                payload = json.loads(body)
+                for name in ("profile", "config"):
+                    text = payload.get(name)
+                    if text is not None:
+                        yaml.safe_load(text)         # validate it parses before writing
+                        (REPO_ROOT / f"{name}.yaml").write_text(text)
+            else:
+                return self._send(404, '{"error":"not found"}')
             self._send(200, '{"ok":true}')
         except Exception as exc:                     # surface, don't crash the server
             self._send(400, json.dumps({"error": str(exc)}))
@@ -217,11 +270,16 @@ def serve(host: str = "127.0.0.1", port: int = 8765, open_browser: bool = True) 
     shown = "127.0.0.1" if host in ("127.0.0.1", "0.0.0.0") else host
     url = f"http://{shown}:{port}/"
     print(f"SIGNAL config → {url}   (Ctrl-C to stop)")
-    if open_browser:
+    # Skip the browser on a headless box (Linux server with no display) — print only.
+    headless = platform.system() == "Linux" and not os.environ.get("DISPLAY")
+    if open_browser and not headless:
         try:
             webbrowser.open(url)
         except Exception:
             pass
+    elif headless:
+        print("  (headless: open the URL yourself, or SSH-tunnel "
+              f"`ssh -L {port}:127.0.0.1:{port} ...`)")
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:

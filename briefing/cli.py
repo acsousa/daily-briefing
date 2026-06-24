@@ -3,8 +3,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from datetime import date, datetime, timedelta, timezone
-from pathlib import Path
 
 from .cluster import cluster_articles
 from .config import load_config, load_profile
@@ -14,12 +14,12 @@ from .ingest import FeedAdapter, dedupe, filter_relevant
 from .ingest.extract import fetch_fulltext
 from .ingest.opinion import is_opinion
 from .ingest.weather import get_forecast
+from .paths import REPO_ROOT
 from .plan import build_plan
 from .rank import rank_clusters
 from .script import write_script
 from .store import RawArticle, Store, StoryThread
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DB = str(REPO_ROOT / "briefing.db")
 BRIEFINGS_DIR = REPO_ROOT / "briefings"
 MAX_FULLTEXT_PER_CLUSTER = 3
@@ -61,11 +61,26 @@ def _recent_articles(store, window_hours) -> list[RawArticle]:
             if a.published_at.replace(tzinfo=a.published_at.tzinfo or timezone.utc) >= cutoff]
 
 
+def _preflight(config) -> None:
+    """Fail fast before any network/LLM work if the run can't possibly succeed."""
+    from .llm import REPO_ROOT  # triggers .env load
+    key = os.getenv("ANTHROPIC_API_KEY", "")
+    if not key or "REPLACE" in key or not key.startswith("sk-"):
+        raise SystemExit(
+            "ANTHROPIC_API_KEY is not set. Add it to .env "
+            f"({REPO_ROOT / '.env'}) — e.g. ANTHROPIC_API_KEY=sk-ant-... "
+            "(or use --dry-run to plan without the API).")
+    if not config.get("sources"):
+        raise SystemExit("no sources configured — see config.example.yaml")
+
+
 def cmd_generate(args) -> None:
     config = load_config()
     profile = load_profile()
     if args.minutes:
         config.setdefault("episode", {})["target_duration_minutes"] = args.minutes
+    if not args.dry_run:
+        _preflight(config)
     today = date.today()
     store = Store(args.db)
 

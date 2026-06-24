@@ -62,6 +62,13 @@ if [ -z "${SHOW_ID:-}" ] || printf '%s' "$SHOW_ID" | grep -q 'REPLACE_ME'; then
   echo ">> spotify.show_id not configured — skipping upload. Audio ready: $OUT"
   exit 0
 fi
+# Freshness guard: don't publish a stale script. episode.json carries the generate date.
+EP_DATE="$("$PY" -c "import json;print(json.load(open('briefings/episode.json')).get('date',''))" 2>/dev/null || true)"
+if [ "$EP_DATE" != "$DATE" ] && [ "${BRIEF_ALLOW_STALE:-0}" != "1" ]; then
+  echo ">> briefing is from '${EP_DATE:-unknown}', not today ($DATE) — run \`brief generate\` first."
+  echo ">> Skipping upload. (Set BRIEF_ALLOW_STALE=1 to publish anyway.) Audio: $OUT"
+  exit 0
+fi
 
 echo ">> Uploading to Spotify"
 RESULT=$("$STS" --json upload "$OUT" \
