@@ -13,7 +13,8 @@ def test_yaml_to_form_projects_values():
               "voices": {"AVA": "en-US-AriaNeural", "ANDREW": "en-US-GuyNeural"}}
     form = yaml_to_form(profile, config)
     assert form["name"] == "Andrew Sousa"
-    assert form["topics"] == ["technology", "defense"]
+    assert [t["topic"] for t in form["topics"]] == ["technology", "defense"]
+    assert form["topics"][1]["weight"] == 0.9       # weight carried into the form
     assert form["length"] == 25
     assert form["time"] == "05:00"
     assert form["voice"] == "aria_guy"            # matched the Aria+Guy pair
@@ -35,8 +36,10 @@ def test_form_to_yaml_preserves_untouched_keys():
     }
     config = {"sources": [{"id": "wbur"}], "weather": {"latitude": 42.0},
               "llm": {"default_model": "claude-opus-4-8"}, "episode": {"target_duration_minutes": 25}}
-    form = {"name": "Andrew", "topics": ["defense", "ai startups"], "length": 20,
-            "time": "08:00", "voice": "jenny_brian", "tone": 70,
+    form = {"name": "Andrew",
+            "topics": [{"topic": "defense", "weight": 0.9, "keywords": ["DoD"]},
+                       {"topic": "ai startups", "weight": 0.5, "keywords": []}],
+            "length": 20, "time": "08:00", "voice": "jenny_brian", "tone": 70,
             "must_cover": ["earnings"], "avoid": ["celebrity"]}
 
     new_profile, new_config = form_to_yaml(form, profile, config)
@@ -51,9 +54,10 @@ def test_form_to_yaml_preserves_untouched_keys():
     # must_cover is written; the legacy `favor` key is dropped
     assert new_profile["must_cover"] == ["earnings"]
     assert "favor" not in new_profile
-    # existing 'defense' interest keeps its weight/keywords; freeform topic gets a keyword
+    # per-topic weight + keywords come straight from the form; freeform topic self-keywords
     by_topic = {i["topic"]: i for i in new_profile["interests"]}
     assert by_topic["defense"]["weight"] == 0.9 and by_topic["defense"]["keywords"] == ["DoD"]
+    assert by_topic["ai startups"]["weight"] == 0.5
     assert by_topic["ai startups"]["keywords"] == ["ai startups"]
     # tone slider now writes the style.tone sentence the scriptwriter/editor actually read
     assert new_profile["style"]["playfulness"] == 70

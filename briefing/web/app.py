@@ -149,7 +149,9 @@ def yaml_to_form(profile: dict, config: dict) -> dict:
         "name": owner.get("name", ""),
         "location": _location_str(owner),
         "regions": list(profile.get("regions") or ["U.S."]),
-        "topics": [i["topic"] for i in profile.get("interests", []) if isinstance(i, dict) and "topic" in i],
+        "topics": [{"topic": i["topic"], "weight": float(i.get("weight", 1.0)),
+                    "keywords": list(i.get("keywords") or [])}
+                   for i in profile.get("interests", []) if isinstance(i, dict) and "topic" in i],
         "length": int((config.get("episode") or {}).get("target_duration_minutes", 10)),
         "time": (config.get("schedule") or {}).get("drop_time", "08:00"),
         "lead_hours": int((config.get("schedule") or {}).get("lead_hours", 2)),
@@ -186,14 +188,18 @@ def form_to_yaml(form: dict, profile: dict, config: dict) -> tuple[dict, dict]:
     profile["owner"] = owner
     profile["regions"] = list(form.get("regions") or ["U.S."])
 
-    existing = {i.get("topic"): i for i in profile.get("interests", []) if isinstance(i, dict)}
     interests = []
-    for topic in form.get("topics", []):
-        if topic in existing:                       # keep prior weight/keywords
-            interests.append(existing[topic])
-        else:
-            interests.append({"topic": topic, "weight": 1.0,
-                              "keywords": [] if topic in TAXONOMY else [topic]})
+    for it in form.get("topics", []):               # each: {topic, weight, keywords} (or a bare string)
+        topic = (it.get("topic") if isinstance(it, dict) else it) or ""
+        topic = topic.strip()
+        if not topic:
+            continue
+        weight = float(it.get("weight", 1.0)) if isinstance(it, dict) else 1.0
+        weight = max(0.0, min(1.0, weight))
+        kws = list(it.get("keywords") or []) if isinstance(it, dict) else []
+        if not kws and topic not in TAXONOMY:       # a freeform topic keeps itself as a keyword
+            kws = [topic]
+        interests.append({"topic": topic, "weight": round(weight, 2), "keywords": kws})
     profile["interests"] = interests
     profile["avoid"] = list(form.get("avoid", []))
     profile["must_cover"] = list(form.get("must_cover", []))
