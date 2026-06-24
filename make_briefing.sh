@@ -12,10 +12,20 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 # ---- config -----------------------------------------------------------------
-STS="$HOME/.local/bin/save-to-spotify"          # full path; cron has no PATH
-SHOW_ID="spotify:show:033AAkPmapL99eyKwK0UQO"   # Andrew's Daily Rundown
-SHOW_TITLE="Andrew's Daily Rundown"
-# Voice / tempo / gaps are configured at the top of render_briefing.py
+PY="python3"; [ -x ".venv/bin/python" ] && PY=".venv/bin/python"
+# Resolve the save-to-spotify CLI: PATH, then ~/.local/bin, then /usr/local/bin.
+STS="$(command -v save-to-spotify 2>/dev/null || true)"
+[ -z "$STS" ] && [ -x "$HOME/.local/bin/save-to-spotify" ] && STS="$HOME/.local/bin/save-to-spotify"
+[ -z "$STS" ] && [ -x "/usr/local/bin/save-to-spotify" ] && STS="/usr/local/bin/save-to-spotify"
+# Show id + episode title come from config / profile (not hard-coded to one user).
+SHOW_ID="$("$PY" -c "from briefing.config import load_config; print((load_config().get('spotify') or {}).get('show_id',''))" 2>/dev/null || true)"
+TITLE="$("$PY" - <<'PY' 2>/dev/null || echo 'Daily Briefing'
+from briefing.config import load_profile
+n = ((load_profile().get('owner') or {}).get('name') or '').split()
+print((n[0] + "'s Daily Briefing") if n else 'Daily Briefing')
+PY
+)"
+# Voice / tempo / gaps / music are configured under render: in config.yaml
 # -----------------------------------------------------------------------------
 
 DATE="$(date +%Y-%m-%d)"
@@ -43,21 +53,30 @@ status = "ok" if lo <= a <= hi else "WARNING — outside target buffer"
 print(f">> Duration: {a:.1f}m (target {t:.0f}m, accept {lo:.0f}-{hi:.0f}m) — {status}")
 PY
 
-# Step C — upload to the dedicated show, poll until READY
+# Step C — publish to Spotify (skipped gracefully if not set up)
+if [ -z "${STS:-}" ] || [ ! -x "$STS" ]; then
+  echo ">> save-to-spotify not found — skipping upload. Audio ready: $OUT"
+  exit 0
+fi
+if [ -z "${SHOW_ID:-}" ] || printf '%s' "$SHOW_ID" | grep -q 'REPLACE_ME'; then
+  echo ">> spotify.show_id not configured — skipping upload. Audio ready: $OUT"
+  exit 0
+fi
+
 echo ">> Uploading to Spotify"
 RESULT=$("$STS" --json upload "$OUT" \
-  --title "$SHOW_TITLE — $PRETTY_DATE" \
-  --summary "Your two-host daily briefing: weather, headlines, and the day ahead." \
+  --title "$TITLE — $PRETTY_DATE" \
+  --summary "Your daily news briefing: top stories, markets, and the day ahead." \
   --show-id "$SHOW_ID")
 echo "$RESULT"
 
-EP_URI=$(echo "$RESULT" | python3 -c 'import sys,json;print(json.load(sys.stdin)["episode_uri"])')
+EP_URI=$(echo "$RESULT" | "$PY" -c 'import sys,json;print(json.load(sys.stdin)["episode_uri"])')
 EP_ID=${EP_URI#spotify:episode:}
 
 echo ">> Waiting for episode to be READY ($EP_ID)"
 for i in $(seq 1 20); do
   R=$("$STS" --json episodes status "$EP_ID" \
-      | python3 -c 'import sys,json;print(json.load(sys.stdin).get("readiness","?"))')
+      | "$PY" -c 'import sys,json;print(json.load(sys.stdin).get("readiness","?"))')
   echo "   poll $i: $R"
   [ "$R" = "READY" ] && break
   [ "$R" = "FAILED" ] && echo "Processing failed" && exit 1

@@ -6,8 +6,8 @@
 set -uo pipefail
 cd "$(dirname "$0")"
 
-# launchd has a minimal PATH; add Homebrew + the save-to-spotify location.
-export PATH="/opt/homebrew/bin:$HOME/.local/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+# launchd/cron/systemd have a minimal PATH; add common bin dirs (macOS + Linux) and keep $PATH.
+export PATH="$HOME/.local/bin:/opt/homebrew/bin:/home/linuxbrew/.linuxbrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH:-}"
 
 PY=".venv/bin/python"; [ -x "$PY" ] || PY="python3"
 mkdir -p briefings

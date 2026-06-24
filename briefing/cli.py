@@ -157,20 +157,20 @@ def cmd_generate(args) -> None:
 
 def cmd_config(args) -> None:
     from .web import serve
-    serve(port=args.port, open_browser=not args.no_browser)
+    serve(host=args.host, port=args.port, open_browser=not args.no_browser)
 
 
 def cmd_schedule(args) -> None:
     from . import schedule
     if args.uninstall:
-        schedule.uninstall()
-        print("daily schedule removed")
+        print(f"daily schedule removed ({schedule.uninstall()})")
         return
-    hour, minute = schedule.install()
+    hour, minute, mech = schedule.install()
     sched = load_config().get("schedule") or {}
-    print(f"daily briefing scheduled at {hour:02d}:{minute:02d} "
+    print(f"daily briefing scheduled at {hour:02d}:{minute:02d} via {mech} "
           f"(drop {sched.get('drop_time', '08:00')} − {sched.get('lead_hours', 2)}h). "
-          f"Mac must be awake or asleep (not off); it runs on wake if missed.")
+          f"The machine must be on at that time; missed runs catch up on the next "
+          f"{'wake' if mech == 'launchd' else 'boot'}.")
 
 
 def main(argv=None) -> None:
@@ -191,6 +191,8 @@ def main(argv=None) -> None:
 
     pc = sub.add_parser("config", help="open the SIGNAL web UI to edit profile.yaml/config.yaml")
     pc.add_argument("--port", type=int, default=8765)
+    pc.add_argument("--host", default="127.0.0.1",
+                    help="bind address; use 0.0.0.0 for remote access (prefer an SSH tunnel)")
     pc.add_argument("--no-browser", action="store_true")
     pc.set_defaults(func=cmd_config)
 

@@ -212,9 +212,10 @@ class Handler(BaseHTTPRequestHandler):
         pass
 
 
-def serve(port: int = 8765, open_browser: bool = True) -> None:
-    httpd = HTTPServer(("127.0.0.1", port), Handler)
-    url = f"http://127.0.0.1:{port}/"
+def serve(host: str = "127.0.0.1", port: int = 8765, open_browser: bool = True) -> None:
+    httpd = HTTPServer((host, port), Handler)
+    shown = "127.0.0.1" if host in ("127.0.0.1", "0.0.0.0") else host
+    url = f"http://{shown}:{port}/"
     print(f"SIGNAL config → {url}   (Ctrl-C to stop)")
     if open_browser:
         try:
