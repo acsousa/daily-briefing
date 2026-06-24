@@ -75,7 +75,7 @@
           <div><div style="font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.18em;color:#54655e;">TONE</div><div id="r-tone" style="font:600 16px 'Space Grotesk';color:#fbbf24;margin-top:3px;">BALANCED</div></div>
         </div>
         <div style="margin-top:26px;height:1px;background:rgba(52,211,153,0.12);"></div>
-        <div style="margin-top:18px;font:400 11px 'IBM Plex Mono',monospace;line-height:1.7;color:#46544e;">SYS: feed compiles<br/>nightly at 03:00.<br/>est. render &lt; 90s.</div>
+        <div id="r-sys" style="margin-top:18px;font:400 11px 'IBM Plex Mono',monospace;line-height:1.7;color:#46544e;">—</div>
       </div>
 
       <!-- right fields -->
@@ -225,6 +225,7 @@ function render(){
   $('r-drop').textContent = timeDisplay(state.time);
   $('r-voice').textContent = voiceName(state.voice);
   $('r-tone').textContent = toneLabel(state.tone);
+  $('r-sys').innerHTML = `SYS: builds daily at<br/>${runTime(state.time, state.lead_hours)} · ${state.lead_hours}h before<br/>your ${timeDisplay(state.time)} drop · ${esc(SCHEDULER)}`;
 
   $('location').value = state.location;
   $('topic-chips').innerHTML = state.topics.map((t,i)=>tag(t,'topic',i)).join('');
