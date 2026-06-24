@@ -283,6 +283,33 @@ def save_form(form: dict) -> None:
     _write_yaml("config", config)
 
 
+# --- config-page coverage map -------------------------------------------------
+# Every leaf key in profile.example.yaml + config.example.yaml must appear here,
+# either as a field the friendly form edits (FORM_FIELDS) or one intentionally
+# left to the raw-YAML editor (RAW_ONLY). tests/test_config_coverage.py enforces
+# this so the page and the YAML can never silently drift apart again — add a new
+# config field and the test fails until you surface it (form) or list it (raw).
+FORM_FIELDS = {
+    "owner.name", "owner.location.city", "owner.location.state",
+    "interests", "regions", "must_cover", "avoid", "style.tone",
+    "sources", "weather.latitude", "weather.longitude", "spotify.show_id",
+    "episode.target_duration_minutes", "schedule.drop_time", "schedule.lead_hours",
+    "llm.default_model", "llm.editor_model", "llm.script_model",
+    "voices.AVA", "voices.ANDREW",
+}
+RAW_ONLY = {
+    "owner.location.timezone", "limits.max_segments",
+    "ingest.window_hours", "weather.provider",
+    "continuity.recent_days", "continuity.week_days", "continuity.month_days",
+    "ranking.weights.freshness", "ranking.weights.importance", "ranking.weights.interest",
+    "ranking.weights.region", "ranking.weights.novelty",
+    "render.rate", "render.gap_seconds", "render.segment_gap_seconds",
+    "render.music.enabled", "render.music.dir", "render.music.min_seconds",
+    "render.music.max_seconds", "render.music.intro_seconds",
+    "render.intro", "render.sting",
+}
+
+
 class Handler(BaseHTTPRequestHandler):
     def _send(self, code, body, ctype="application/json"):
         b = body.encode() if isinstance(body, str) else body
