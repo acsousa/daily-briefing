@@ -1,4 +1,4 @@
-# Generated audio artifacts
+# Generated audio artifacts (but the bundled bumper tracks under briefing/assets/ ship — see below)
 *.mp3
 *.aiff
 *.wav
@@ -39,5 +39,10 @@ token.json
 # Run logs
 briefings/*.log
 
-# Music assets (user-supplied tracks; large, not part of the repo)
-briefing/assets/
+# Music assets: the curated royalty-free bumper tracks ship with the repo.
+# (Drop your own no-lyric tracks here too; the engine rotates whatever it finds.)
+!briefing/assets/
+!briefing/assets/*.mp3
+!briefing/assets/*.wav
+!briefing/assets/*.ogg
+!briefing/assets/*.m4a

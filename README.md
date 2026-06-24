@@ -18,9 +18,11 @@ your config → fetch real news → cluster · rank · plan → editor + scriptw
 |---|---|---|
 | **Python 3.11+** | runs the pipeline | macOS or Linux |
 | **ffmpeg** | stitches the audio | `brew install ffmpeg` / `apt install ffmpeg` |
-| **Anthropic API key** | the editor + scriptwriter (Claude) | pay-as-you-go, ~$1–3/episode — [console](https://platform.claude.com) |
-| **save-to-spotify** *(optional)* | publishes to Spotify | skip it and you still get the MP3 |
-| **Music tracks** *(optional)* | bumpers between segments | drop no-lyric mp3s in `briefing/assets/` (e.g. Pixabay) |
+| **Anthropic API key** | the editor + scriptwriter (Claude) | pay-as-you-go, <$1/episode — [console](https://platform.claude.com) |
+| **save-to-spotify** | publishes the episode so you can listen | or play the MP3 in any podcast/news app you like |
+
+A set of royalty-free bumper tracks ships in `briefing/assets/` — the music engine rotates
+them automatically. Drop your own no-lyric mp3s there to personalize it.
 
 ## Setup
 
@@ -40,26 +42,20 @@ echo 'ANTHROPIC_API_KEY=sk-ant-...' > .env
 # 4. Set your preferences (web UI → writes profile.yaml / config.yaml)
 .venv/bin/brief config     # opens http://127.0.0.1:8765
 
-# 5. Build today's episode
-.venv/bin/brief generate   # → briefings/briefing.txt + episode.json
-./make_briefing.sh         # render to MP3 (and publish, if Spotify is set up)
-```
-
-That's it for local audio. **Publishing and scheduling are optional** (below).
-
-### Publish to Spotify (optional)
-
-Uses Spotify's official [`save-to-spotify`](https://github.com/spotify/save-to-spotify) CLI
-(macOS + Linux builds). Install and authenticate once:
-
-```sh
+# 5. Connect Spotify so the episode lands in your feed each day
 curl -fsSL https://saveto.spotify.com/install.sh | bash   # detects your OS/arch
 save-to-spotify auth login                                # one-time browser login
+# then set spotify.show_id in config.yaml — run `save-to-spotify shows` to find it
+# Prefer another player? Skip this step and listen to the MP3 in any podcast/news app.
+
+# 6. Build today's episode
+.venv/bin/brief generate   # → briefings/briefing.txt + episode.json
+./make_briefing.sh         # render to MP3, then publish to your show
 ```
 
-Then set `spotify.show_id` in `config.yaml` (run `save-to-spotify shows` to get it).
-`make_briefing.sh` uploads automatically; if `save-to-spotify` or the show id is missing, it
-just **skips the upload** and leaves you the MP3.
+If `save-to-spotify` or the show id isn't set, `make_briefing.sh` just **skips the upload**
+and leaves you the MP3 to play wherever you like. **Scheduling** is the only optional piece
+(below).
 
 ### Run it daily (optional)
 

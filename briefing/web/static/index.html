@@ -46,7 +46,7 @@
         <span style="font:700 20px 'Space Grotesk';letter-spacing:.14em;color:#eafff6;">SIGNAL</span>
         <span style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.22em;color:#3fae8c;">//DAILY.CAST</span>
       </div>
-      <div style="display:flex;align-items:center;gap:9px;font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.16em;color:#34d399;"><span style="width:7px;height:7px;border-radius:50%;background:#34d399;box-shadow:0 0 10px #34d399;animation:blink 2s infinite;"></span>ONLINE · CONFIGURING FEED</div>
+      <div style="display:flex;align-items:center;gap:9px;font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.16em;color:#34d399;"><span style="width:7px;height:7px;border-radius:50%;background:#34d399;box-shadow:0 0 10px #34d399;animation:blink 2s infinite;"></span>ONLINE · <span id="os-badge" style="color:#7d9088;">—</span> · CONFIGURING FEED</div>
     </div>
 
     <!-- orb hero -->
@@ -339,7 +339,7 @@ $('save').addEventListener('click', async ()=>{
 
 // load catalogs + current config
 async function load(){
-  try{ const m = await (await fetch('/api/meta')).json(); if(m.suggested) SUGGEST=m.suggested; if(m.voices) VOICES=m.voices; if(m.regions) REGION_SUGGEST=m.regions; if(m.quality) QUALITY=m.quality; if(m.scheduler) SCHEDULER=m.scheduler; }catch{}
+  try{ const m = await (await fetch('/api/meta')).json(); if(m.suggested) SUGGEST=m.suggested; if(m.voices) VOICES=m.voices; if(m.regions) REGION_SUGGEST=m.regions; if(m.quality) QUALITY=m.quality; if(m.scheduler) SCHEDULER=m.scheduler; if(m.os) $('os-badge').textContent=m.os; }catch{}
   try{
     const c = await (await fetch('/api/config')).json();
     Object.assign(state, {
@@ -348,7 +348,14 @@ async function load(){
       voice:c.voice||VOICES[0].id, tone:+c.tone||35, favor:c.favor||[], avoid:c.avoid||[]
     });
   }catch{}
-  try{ const raw = await (await fetch('/api/raw')).json(); $('raw-profile').value=raw.profile||''; $('raw-config').value=raw.config||''; }catch{}
+  try{
+    const res = await fetch('/api/raw');
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const raw = await res.json();
+    $('raw-profile').value = raw.profile||''; $('raw-config').value = raw.config||'';
+  }catch(err){
+    const st=$('raw-status'); if(st){ st.style.color='#e0a85a'; st.textContent='could not load YAML ('+err.message+') — restart `brief config` to pick up the latest server'; }
+  }
   render();
 }
 load();

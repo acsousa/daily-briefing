@@ -88,6 +88,12 @@ def _tone_label(t: int) -> str:
     return "ANALYTICAL" if t < 33 else "BALANCED" if t < 66 else "PLAYFUL"
 
 
+def _os_label() -> str:
+    """Friendly name for the auto-detected host OS (shown in the page header)."""
+    return {"Darwin": "macOS", "Linux": "Linux", "Windows": "Windows"}.get(
+        platform.system(), platform.system() or "unknown")
+
+
 # Model-quality presets (friendly stand-in for the three llm.* model fields).
 QUALITY = {
     "opus":   {"default_model": "claude-opus-4-8", "editor_model": "claude-opus-4-8", "script_model": "claude-opus-4-8"},
@@ -235,7 +241,7 @@ class Handler(BaseHTTPRequestHandler):
             from ..schedule import mechanism
             self._send(200, json.dumps({"suggested": TAXONOMY, "voices": VOICE_OPTIONS,
                                         "regions": REGIONS, "quality": QUALITY_OPTIONS,
-                                        "scheduler": mechanism()}))
+                                        "scheduler": mechanism(), "os": _os_label()}))
         elif self.path == "/api/raw":                # full files, for the advanced editor
             self._send(200, json.dumps({"profile": _raw_text("profile"),
                                         "config": _raw_text("config")}))
