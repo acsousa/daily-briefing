@@ -157,6 +157,7 @@ def yaml_to_form(profile: dict, config: dict) -> dict:
         "lead_hours": int((config.get("schedule") or {}).get("lead_hours", 2)),
         "quality": _quality_of(config.get("llm") or {}),
         "voice": _pair_for(config.get("voices") or {}),
+        "show_id": (config.get("spotify") or {}).get("show_id", ""),
         "tone": int(style.get("playfulness", 35)),
         "must_cover": list(profile.get("must_cover") or profile.get("favor") or []),
         "avoid": list(profile.get("avoid", [])),
@@ -233,6 +234,11 @@ def form_to_yaml(form: dict, profile: dict, config: dict) -> tuple[dict, dict]:
     voices["AVA"] = pair["ava"]
     voices["ANDREW"] = pair["andrew"]
     config["voices"] = voices
+
+    if "show_id" in form:                           # Spotify show to publish to (optional)
+        spotify = dict(config.get("spotify") or {})
+        spotify["show_id"] = (form.get("show_id") or "").strip()
+        config["spotify"] = spotify
 
     return profile, config
 

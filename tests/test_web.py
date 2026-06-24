@@ -10,8 +10,10 @@ def test_yaml_to_form_projects_values():
         "style": {"playfulness": 40, "tone": "rich paragraph"},
     }
     config = {"episode": {"target_duration_minutes": 25}, "schedule": {"drop_time": "05:00"},
-              "voices": {"AVA": "en-US-AriaNeural", "ANDREW": "en-US-GuyNeural"}}
+              "voices": {"AVA": "en-US-AriaNeural", "ANDREW": "en-US-GuyNeural"},
+              "spotify": {"show_id": "spotify:show:abc"}}
     form = yaml_to_form(profile, config)
+    assert form["show_id"] == "spotify:show:abc"
     assert form["name"] == "Andrew Sousa"
     assert [t["topic"] for t in form["topics"]] == ["technology", "defense"]
     assert form["topics"][1]["weight"] == 0.9       # weight carried into the form
@@ -40,7 +42,7 @@ def test_form_to_yaml_preserves_untouched_keys():
             "topics": [{"topic": "defense", "weight": 0.9, "keywords": ["DoD"]},
                        {"topic": "ai startups", "weight": 0.5, "keywords": []}],
             "length": 20, "time": "08:00", "voice": "jenny_brian", "tone": 70,
-            "must_cover": ["earnings"], "avoid": ["celebrity"]}
+            "show_id": "spotify:show:xyz", "must_cover": ["earnings"], "avoid": ["celebrity"]}
 
     new_profile, new_config = form_to_yaml(form, profile, config)
 
@@ -50,6 +52,7 @@ def test_form_to_yaml_preserves_untouched_keys():
     assert new_config["voices"]["AVA"] == "en-US-JennyNeural"     # the pair sets both
     assert new_config["voices"]["ANDREW"] == "en-US-BrianNeural"
     assert new_config["schedule"]["drop_time"] == "08:00"
+    assert new_config["spotify"]["show_id"] == "spotify:show:xyz"
     assert new_profile["avoid"] == ["celebrity"]
     # must_cover is written; the legacy `favor` key is dropped
     assert new_profile["must_cover"] == ["earnings"]

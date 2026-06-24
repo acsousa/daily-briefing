@@ -129,6 +129,11 @@
             <input id="lead-hours" type="number" min="0" max="12" class="txt mono" style="width:64px;padding:8px 10px;"/>
             <span style="font:500 10px 'IBM Plex Mono',monospace;color:#54655e;">hrs early · <span id="sched-note" style="color:#7d9088;">—</span></span>
           </div>
+          <div style="margin-top:13px;">
+            <span style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.14em;color:#5f7269;">PUBLISH TO SPOTIFY</span>
+            <input id="show-id" class="txt mono" placeholder="spotify:show:…  (optional — leave blank to just get the MP3)" style="margin-top:6px;padding:8px 11px;font-size:11px;"/>
+            <span style="display:block;font:400 10px 'IBM Plex Mono',monospace;color:#54655e;margin-top:5px;">run <b style="color:#7d9088;">save-to-spotify shows</b> to find your show id</span>
+          </div>
         </div>
 
         <div>
@@ -199,7 +204,7 @@ let VOICES = [{id:'ava_andrew',name:'AVA & ANDREW',desc:'Ava ♀ expressive · A
 let QUALITY = [{id:'opus',name:'Highest quality',desc:'Opus everywhere'},{id:'mixed',name:'Balanced',desc:'Opus editor · Sonnet copy'},{id:'sonnet',name:'Economy',desc:'Sonnet everywhere'}];
 let SCHEDULER = '—';
 
-const state = {name:'',location:'',topics:[{topic:'technology',weight:1.0,keywords:[]},{topic:'business',weight:0.8,keywords:[]}],regions:['U.S.'],length:10,time:'08:00',lead_hours:2,quality:'mixed',voice:'ava_andrew',tone:35,must_cover:[],avoid:[]};
+const state = {name:'',location:'',topics:[{topic:'technology',weight:1.0,keywords:[]},{topic:'business',weight:0.8,keywords:[]}],regions:['U.S.'],length:10,time:'08:00',lead_hours:2,quality:'mixed',voice:'ava_andrew',show_id:'',tone:35,must_cover:[],avoid:[]};
 let EXPANDED = null;   // topic whose weight/keywords editor is open
 const hasTopic = n => state.topics.some(t=>t.topic===n);
 const getTopic = n => state.topics.find(t=>t.topic===n);
@@ -291,6 +296,7 @@ function render(){
   }).join('');
 
   $('lead-hours').value = state.lead_hours;
+  $('show-id').value = state.show_id;
   $('sched-note').textContent = `runs ${runTime(state.time, state.lead_hours)} via ${SCHEDULER}`;
 
   $('tone').value = state.tone;
@@ -344,6 +350,7 @@ document.addEventListener('keydown', e=>{
 $('topic-input').addEventListener('keydown', e=>{ if(e.key!=='Enter') return; e.preventDefault(); addTopic(e.target.value); e.target.value=''; render(); });
 $('name').addEventListener('input', e=>{ state.name=e.target.value; $('r-name').textContent=state.name||'—'; });
 $('location').addEventListener('input', e=>{ state.location=e.target.value; });
+$('show-id').addEventListener('input', e=>{ state.show_id=e.target.value; });
 $('tone').addEventListener('input', e=>{ state.tone=+e.target.value; render(); });
 $('length').addEventListener('input', e=>{ state.length=snapLength(e.target.value); render(); });
 $('lead-hours').addEventListener('input', e=>{ state.lead_hours=Math.max(0,Math.min(12,+e.target.value||0)); $('sched-note').textContent=`runs ${runTime(state.time,state.lead_hours)} via ${SCHEDULER}`; });
@@ -389,7 +396,7 @@ async function load(){
     Object.assign(state, {
       name:c.name||'', location:c.location||'', topics:c.topics||[], regions:c.regions||['U.S.'],
       length:snapLength(c.length||10), time:c.time||'08:00', lead_hours:(c.lead_hours??2), quality:c.quality||'mixed',
-      voice:c.voice||VOICES[0].id, tone:+c.tone||35, must_cover:c.must_cover||[], avoid:c.avoid||[]
+      voice:c.voice||VOICES[0].id, show_id:c.show_id||'', tone:+c.tone||35, must_cover:c.must_cover||[], avoid:c.avoid||[]
     });
   }catch{}
   try{
