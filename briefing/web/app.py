@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import os
 import platform
+import re
 import urllib.parse
 import urllib.request
 import webbrowser
@@ -141,6 +142,21 @@ def _location_str(owner: dict) -> str:
     return ", ".join(p for p in parts if p)
 
 
+def _builtin_sources() -> list[dict]:
+    """The shipped feed catalog (config.example.yaml). These merge in via load_config,
+    so the form treats them as read-only built-ins and only manages the user's own feeds."""
+    ex = REPO_ROOT / "config.example.yaml"
+    data = (yaml.safe_load(ex.read_text()) or {}) if ex.exists() else {}
+    return data.get("sources") or []
+
+
+BUILTIN_IDS = {s.get("id") for s in _builtin_sources()}
+
+
+def _slug(s: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "_", (s or "").lower()).strip("_") or "feed"
+
+
 def yaml_to_form(profile: dict, config: dict) -> dict:
     """Project the current YAML into the form's value shape (for prefill)."""
     style = profile.get("style") or {}
@@ -158,6 +174,9 @@ def yaml_to_form(profile: dict, config: dict) -> dict:
         "quality": _quality_of(config.get("llm") or {}),
         "voice": _pair_for(config.get("voices") or {}),
         "show_id": (config.get("spotify") or {}).get("show_id", ""),
+        "sources": [{"name": s.get("name", ""), "url": s.get("url", ""),
+                     "topic": (s.get("topics") or [""])[0]}
+                    for s in (config.get("sources") or []) if s.get("id") not in BUILTIN_IDS],
         "tone": int(style.get("playfulness", 35)),
         "must_cover": list(profile.get("must_cover") or profile.get("favor") or []),
         "avoid": list(profile.get("avoid", [])),
@@ -240,6 +259,21 @@ def form_to_yaml(form: dict, profile: dict, config: dict) -> tuple[dict, dict]:
         spotify["show_id"] = (form.get("show_id") or "").strip()
         config["spotify"] = spotify
 
+    if "sources" in form:                           # user's own feeds (built-ins come from example)
+        custom, seen = [], set()
+        for s in form.get("sources") or []:
+            name, url = (s.get("name") or "").strip(), (s.get("url") or "").strip()
+            if not name or not url:
+                continue
+            sid = _slug(name)
+            while sid in seen or sid in BUILTIN_IDS:
+                sid += "_"
+            seen.add(sid)
+            topic = (s.get("topic") or "").strip()
+            custom.append({"id": sid, "name": name, "type": "rss", "url": url,
+                           "topics": [topic] if topic else []})
+        config["sources"] = custom
+
     return profile, config
 
 
@@ -266,8 +300,11 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(yaml_to_form(_read_yaml("profile"), _read_yaml("config"))))
         elif self.path == "/api/meta":
             from ..schedule import mechanism
+            builtin = [{"name": s.get("name", s.get("id", "")), "topics": s.get("topics", [])}
+                       for s in _builtin_sources()]
             self._send(200, json.dumps({"suggested": TAXONOMY, "voices": VOICE_OPTIONS,
                                         "regions": REGIONS, "quality": QUALITY_OPTIONS,
+                                        "taxonomy": TAXONOMY, "builtin_sources": builtin,
                                         "scheduler": mechanism(), "os": _os_label()}))
         elif self.path == "/api/raw":                # full files, for the advanced editor
             self._send(200, json.dumps({"profile": _raw_text("profile"),

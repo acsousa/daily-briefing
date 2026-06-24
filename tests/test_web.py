@@ -29,6 +29,23 @@ def test_yaml_to_form_migrates_legacy_favor_to_must_cover():
     assert form["must_cover"] == ["earnings"]
 
 
+def test_custom_feeds_round_trip_and_skip_builtins():
+    from briefing.web.app import BUILTIN_IDS
+    builtin = next(iter(BUILTIN_IDS))                  # any shipped feed id
+    config = {"sources": [
+        {"id": builtin, "name": "shadow", "type": "rss", "url": "x", "topics": ["world"]},
+        {"id": "wbur", "name": "WBUR", "type": "rss", "url": "https://wbur/rss", "topics": ["local"]},
+    ]}
+    form = yaml_to_form({}, config)
+    assert form["sources"] == [{"name": "WBUR", "url": "https://wbur/rss", "topic": "local"}]
+
+    _, new_config = form_to_yaml(
+        {"sources": [{"name": "My Town Times", "url": "https://mtt/feed", "topic": "local"}]}, {}, config)
+    assert new_config["sources"] == [
+        {"id": "my_town_times", "name": "My Town Times", "type": "rss",
+         "url": "https://mtt/feed", "topics": ["local"]}]
+
+
 def test_form_to_yaml_preserves_untouched_keys():
     profile = {
         "owner": {"name": "Old", "location": {"city": "Natick"}},
