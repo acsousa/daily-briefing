@@ -156,9 +156,9 @@
 
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
           <div>
-            <div class="lbl">┌─ FAVOR ──</div>
-            <input id="favor-input" class="txt mono" style="padding:9px 13px;" placeholder="&gt; add + Enter"/>
-            <div id="favor-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;"></div>
+            <div class="lbl">┌─ ALWAYS COVER ──</div>
+            <input id="cover-input" class="txt mono" style="padding:9px 13px;" placeholder="&gt; topic to never miss"/>
+            <div id="cover-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;"></div>
           </div>
           <div>
             <div class="lbl">┌─ AVOID ──</div>
@@ -198,7 +198,7 @@ let VOICES = [{id:'ava_andrew',name:'AVA & ANDREW',desc:'Ava ♀ expressive · A
 let QUALITY = [{id:'opus',name:'Highest quality',desc:'Opus everywhere'},{id:'mixed',name:'Balanced',desc:'Opus editor · Sonnet copy'},{id:'sonnet',name:'Economy',desc:'Sonnet everywhere'}];
 let SCHEDULER = '—';
 
-const state = {name:'',location:'',topics:['technology','business'],regions:['U.S.'],length:10,time:'08:00',lead_hours:2,quality:'mixed',voice:'ava_andrew',tone:35,favor:[],avoid:[]};
+const state = {name:'',location:'',topics:['technology','business'],regions:['U.S.'],length:10,time:'08:00',lead_hours:2,quality:'mixed',voice:'ava_andrew',tone:35,must_cover:[],avoid:[]};
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
@@ -273,7 +273,7 @@ function render(){
   $('tone-thumb').style.left = state.tone + '%';
   $('tone-label').textContent = toneLabel(state.tone);
 
-  $('favor-chips').innerHTML = state.favor.map((t,i)=>tag(t,'favor',i)).join('');
+  $('cover-chips').innerHTML = state.must_cover.map((t,i)=>tag(t,'cover',i)).join('');
   $('avoid-chips').innerHTML = state.avoid.map((t,i)=>tag(t,'avoid',i)).join('');
 }
 
@@ -294,7 +294,7 @@ document.addEventListener('click', e=>{
     const kind=x.dataset.kind, i=+x.dataset.i;
     if(kind==='topic') state.topics = state.topics.filter((_,j)=>j!==i);
     else if(kind==='region') state.regions = state.regions.filter((_,j)=>j!==i);
-    else if(kind==='favor') state.favor = state.favor.filter((_,j)=>j!==i);
+    else if(kind==='cover') state.must_cover = state.must_cover.filter((_,j)=>j!==i);
     else if(kind==='avoid') state.avoid = state.avoid.filter((_,j)=>j!==i);
     render();
   }
@@ -321,7 +321,7 @@ function tagInput(inputId, key){
     e.target.value=''; render();
   });
 }
-tagInput('topic-input','topics'); tagInput('region-input','regions'); tagInput('favor-input','favor'); tagInput('avoid-input','avoid');
+tagInput('topic-input','topics'); tagInput('region-input','regions'); tagInput('cover-input','must_cover'); tagInput('avoid-input','avoid');
 
 $('save').addEventListener('click', async ()=>{
   const btn=$('save'); btn.textContent='▶ SAVING…';
@@ -346,7 +346,7 @@ async function load(){
     Object.assign(state, {
       name:c.name||'', location:c.location||'', topics:c.topics||[], regions:c.regions||['U.S.'],
       length:snapLength(c.length||10), time:c.time||'08:00', lead_hours:(c.lead_hours??2), quality:c.quality||'mixed',
-      voice:c.voice||VOICES[0].id, tone:+c.tone||35, favor:c.favor||[], avoid:c.avoid||[]
+      voice:c.voice||VOICES[0].id, tone:+c.tone||35, must_cover:c.must_cover||[], avoid:c.avoid||[]
     });
   }catch{}
   try{

@@ -88,6 +88,18 @@ def _tone_label(t: int) -> str:
     return "ANALYTICAL" if t < 33 else "BALANCED" if t < 66 else "PLAYFUL"
 
 
+# The tone slider maps to the free-text `style.tone` that the scriptwriter + editor
+# actually read (script.py / editor.py). Without this the slider set only a label and
+# changed nothing in the output.
+TONE_PRESETS = {
+    "ANALYTICAL": "Analytical and precise. Lead with the facts and their implications; "
+                  "minimal banter. Substance over color.",
+    "BALANCED": "Smart, concise, conversational. Substance over hype, with a light human touch.",
+    "PLAYFUL": "Warm, lively, and a little playful. Banter and color are welcome — "
+               "but never at the expense of accuracy.",
+}
+
+
 def _os_label() -> str:
     """Friendly name for the auto-detected host OS (shown in the page header)."""
     return {"Darwin": "macOS", "Linux": "Linux", "Windows": "Windows"}.get(
@@ -144,7 +156,7 @@ def yaml_to_form(profile: dict, config: dict) -> dict:
         "quality": _quality_of(config.get("llm") or {}),
         "voice": _pair_for(config.get("voices") or {}),
         "tone": int(style.get("playfulness", 35)),
-        "favor": list(profile.get("favor", [])),
+        "must_cover": list(profile.get("must_cover") or profile.get("favor") or []),
         "avoid": list(profile.get("avoid", [])),
     }
 
@@ -184,12 +196,15 @@ def form_to_yaml(form: dict, profile: dict, config: dict) -> tuple[dict, dict]:
                               "keywords": [] if topic in TAXONOMY else [topic]})
     profile["interests"] = interests
     profile["avoid"] = list(form.get("avoid", []))
-    profile["favor"] = list(form.get("favor", []))
+    profile["must_cover"] = list(form.get("must_cover", []))
+    profile.pop("favor", None)                      # migrate the old (dead) key away
 
-    style = dict(profile.get("style") or {})        # preserve the rich tone paragraph etc.
+    style = dict(profile.get("style") or {})
     tone = int(form.get("tone", 35))
-    style["playfulness"] = tone
-    style["tone_label"] = _tone_label(tone)
+    label = _tone_label(tone)
+    style["playfulness"] = tone                     # remembers the slider position for round-trip
+    style["tone_label"] = label
+    style["tone"] = TONE_PRESETS[label]             # the sentence the scriptwriter/editor read
     profile["style"] = style
 
     episode = dict(config.get("episode") or {})
