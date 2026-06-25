@@ -14,17 +14,23 @@ import httpx
 from .base import SourceAdapter, make_article
 
 
-# Some publishers 403 non-browser User-Agents; present a browser-like one (common
-# for feed readers). Personal reading — see memory: personal-reading-content-policy.
-_USER_AGENT = (
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
-    "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
-)
+# Some publishers 403 non-browser clients; present browser-like headers (common for feed
+# readers). Personal reading — see memory: personal-reading-content-policy. Note: this won't
+# get past hard bot-protection (Cloudflare) or an IP-level block — those feeds just skip.
+_HEADERS = {
+    "User-Agent": ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+                   "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"),
+    "Accept": "application/rss+xml,application/atom+xml,application/xml,text/xml,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9",
+}
 
 
 def _http_get(url: str) -> bytes:
-    r = httpx.get(url, timeout=20, follow_redirects=True,
-                  headers={"User-Agent": _USER_AGENT})
+    r = httpx.get(url, timeout=20, follow_redirects=True, headers=_HEADERS)
+    if r.status_code in (401, 403, 429):     # publisher is blocking automated access
+        raise RuntimeError(
+            f"{r.status_code} {r.reason_phrase} — publisher blocked automated access; "
+            "skipped (consider removing this feed)")
     r.raise_for_status()
     return r.content
 
