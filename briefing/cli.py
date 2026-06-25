@@ -160,12 +160,12 @@ def cmd_generate(args) -> None:
     update_threads(store, briefed, decisions, today)
     store.close()
 
-    # sanity check: estimated spoken length vs the target (generous buffer)
+    # sanity check: estimated spoken length vs the target (within +/-3 minutes)
     words = len(briefing_text.split())
     est_min = words / 150.0
     target = config.get("episode", {}).get("target_duration_minutes", 20)
-    lo, hi = target * 0.6, target * 1.4
-    status = "ok" if lo <= est_min <= hi else "WARNING — outside target buffer"
+    lo, hi = target - 3, target + 3
+    status = "ok" if lo <= est_min <= hi else "WARNING — outside target window"
     print(f"sanity: ~{est_min:.1f} min of script ({words} words) vs target {target}m — {status}")
 
     print(f"wrote {BRIEFINGS_DIR / 'briefing.txt'} and episode.json")

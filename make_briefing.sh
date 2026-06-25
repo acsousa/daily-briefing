@@ -56,8 +56,8 @@ ACTUAL_MIN=$(ffprobe -v error -show_entries format=duration -of default=noprint_
 "$PY" - "$ACTUAL_MIN" "$TARGET_MIN" <<'PY'
 import sys
 a, t = float(sys.argv[1] or 0), float(sys.argv[2])
-lo, hi = t * 0.6, t * 1.4          # generous +/-40% buffer
-status = "ok" if lo <= a <= hi else "WARNING — outside target buffer"
+lo, hi = t - 3, t + 3              # within +/-3 minutes of target
+status = "ok" if lo <= a <= hi else "WARNING — outside target window"
 print(f">> Duration: {a:.1f}m (target {t:.0f}m, accept {lo:.0f}-{hi:.0f}m) — {status}")
 PY
 
