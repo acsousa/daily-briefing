@@ -39,9 +39,10 @@ cd daily-briefing
 source .venv/bin/activate
 
 # 4. (optional) Connect Spotify so episodes publish to your show
-curl -fsSL https://saveto.spotify.com/install.sh | bash   # install the save-to-spotify CLI
-save-to-spotify auth login                                # one-time browser login
-save-to-spotify shows                                     # copy your show's "show_uri"
+curl -fsSL https://saveto.spotify.com/install.sh | bash         # install the save-to-spotify CLI
+save-to-spotify auth login                                      # one-time browser login
+save-to-spotify shows create --title "My Daily Briefing"        # one-time: creates the show, prints its show_uri
+#   already have a show? skip create and run `save-to-spotify shows` to copy its show_uri
 
 # 5. Configure in the browser — interests, voices, tone, length. If publishing,
 #    paste the show_uri into the SPOTIFY SHOW ID field.
@@ -57,9 +58,18 @@ it by hand, the steps it runs are right there in [`install.sh`](install.sh).
 
 ### What's the "Spotify show id"?
 
-It's the **`show_uri`** from `save-to-spotify shows` — a string like
-`spotify:show:033AAkPmapL99eyKwK0UQO`. Paste the whole thing (including the `spotify:show:`
-prefix) into the **SPOTIFY SHOW ID** field in `brief config`. Leave it blank to skip
+Your show is a **one-time creation** — make it once and reuse its id for every episode:
+
+```sh
+save-to-spotify shows create --title "My Daily Briefing"   # creates it, prints spotify:show:…
+save-to-spotify shows                                      # lists your shows + ids (id is column 1)
+```
+
+The id is the **`show_uri`** — a string like `spotify:show:033AAkPmapL99eyKwK0UQO`. Paste the
+whole thing (including the `spotify:show:` prefix) into the **SPOTIFY SHOW ID** field in
+`brief config`. The id is per **account**, so once created it shows up via `save-to-spotify
+shows` on any machine where you've run `auth login` with the same Spotify account (the token
+is stored per-machine at `~/.config/save-to-spotify/token.json`). Leave the field blank to skip
 publishing — `make_briefing.sh` then just leaves you the MP3 to play in any podcast/news app.
 
 ### Running on a remote server (SSH only)
