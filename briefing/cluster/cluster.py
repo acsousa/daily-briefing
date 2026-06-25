@@ -8,6 +8,7 @@ same story still join.
 from __future__ import annotations
 
 import hashlib
+from collections import Counter
 
 from ..store import StoryCluster
 from ..text import entities, jaccard, tokens
@@ -43,7 +44,8 @@ def cluster_articles(articles) -> list[StoryCluster]:
 def _to_cluster(arts) -> StoryCluster:
     arts = sorted(arts, key=lambda a: a.published_at, reverse=True)
     rep = max(arts, key=lambda a: len(a.title))          # fullest headline
-    topics = sorted({t for a in arts for t in a.topics})
+    topic_counts = Counter(t for a in arts for t in a.topics)
+    topics = sorted(topic_counts)
     ents = entities(" . ".join(a.title for a in arts))
     sources = {a.source_id for a in arts}
     cid = hashlib.sha256("|".join(sorted(a.id for a in arts)).encode()).hexdigest()[:16]
@@ -52,6 +54,7 @@ def _to_cluster(arts) -> StoryCluster:
         title=rep.title,
         article_ids=[a.id for a in arts],
         topics=topics,
+        topic_counts=dict(topic_counts),
         entities=ents,
         source_count=len(sources),
         first_seen=min(a.published_at for a in arts),

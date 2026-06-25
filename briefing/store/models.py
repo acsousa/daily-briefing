@@ -30,6 +30,7 @@ class StoryCluster(BaseModel):
     summary: str | None = None
     article_ids: list[str] = Field(default_factory=list)
     topics: list[str] = Field(default_factory=list)
+    topic_counts: dict[str, int] = Field(default_factory=dict)  # articles per topic (dominance)
     entities: list[str] = Field(default_factory=list)
     source_count: int = 1            # distinct sources covering it (coverage salience)
     first_seen: datetime
