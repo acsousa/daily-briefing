@@ -38,37 +38,69 @@ cd daily-briefing
 # 3. Activate the env (now `brief` works without a path prefix)
 source .venv/bin/activate
 
-# 4. Configure everything in the browser — name, interests, voices, show name, Spotify id
+# 4. (optional) Connect Spotify so episodes publish to your show
+curl -fsSL https://saveto.spotify.com/install.sh | bash   # install the save-to-spotify CLI
+save-to-spotify auth login                                # one-time browser login
+save-to-spotify shows                                     # copy your show's "show_uri"
+
+# 5. Configure in the browser — interests, voices, tone, length. If publishing,
+#    paste the show_uri into the SPOTIFY SHOW ID field.
 brief config               # opens http://127.0.0.1:8765
 
-# 5. Build today's episode
+# 6. Build today's episode
 brief generate             # → briefings/briefing.txt + episode.json
-./make_briefing.sh         # render to MP3, then publish to your show
+./make_briefing.sh         # render to MP3 (and publish, if Spotify is set up)
 ```
 
 `./install.sh` is safe to re-run and won't clobber your `.env` or config. If you'd rather do
 it by hand, the steps it runs are right there in [`install.sh`](install.sh).
 
-### Publish to Spotify (optional)
+### What's the "Spotify show id"?
+
+It's the **`show_uri`** from `save-to-spotify shows` — a string like
+`spotify:show:033AAkPmapL99eyKwK0UQO`. Paste the whole thing (including the `spotify:show:`
+prefix) into the **SPOTIFY SHOW ID** field in `brief config`. Leave it blank to skip
+publishing — `make_briefing.sh` then just leaves you the MP3 to play in any podcast/news app.
+
+### Running on a remote server (SSH only)
+
+No desktop on the box? The config page and the Spotify login both use a browser, so forward
+their ports over SSH from your laptop — **both at once**:
 
 ```sh
-curl -fsSL https://saveto.spotify.com/install.sh | bash   # detects your OS/arch
-save-to-spotify auth login                                # one-time browser login
+ssh -L 8765:127.0.0.1:8765 -L 8085:127.0.0.1:8085 you@your-server
 ```
 
-Then put your **show id** in `brief config` (run `save-to-spotify shows` to find it). If it's
-not set, `make_briefing.sh` just **skips the upload** and leaves you the MP3 to play in any
-podcast/news app.
+Then, **inside that same SSH session** on the server:
+
+- **Config page** — `brief config` (it detects the headless box and just prints the URL).
+  Open **http://127.0.0.1:8765** in your laptop browser, edit, **Save**, then Ctrl-C.
+- **Spotify login** — run `save-to-spotify auth login` in the tunneled session; it completes
+  through the tunnel automatically (add `--no-browser` if no browser opens, then open the
+  printed URL yourself). Port 8085 is the OAuth callback the tunnel carries back.
+
+(Local 8765 busy? Map another, e.g. `-L 9000:127.0.0.1:8765`, and browse :9000.) Everything
+else — `brief generate`, `./make_briefing.sh`, `brief schedule` — runs on the server with no
+browser.
 
 ### Run it daily (optional)
 
 ```sh
-brief schedule          # install the daily run; --uninstall to remove
+brief schedule              # install the daily run
+brief schedule --uninstall  # stop the daily run (removes the launchd/systemd/cron job)
 ```
 
 It builds a fixed **2 hours** before your `drop_time` (set in `brief config`). The mechanism is
 chosen for your OS automatically: **launchd** on macOS, a **systemd user timer** on Linux
 (or **cron** if systemd isn't available). The machine must be on at that time.
+
+**Stopping things:**
+- **Stop the automatic daily run:** `brief schedule --uninstall` (this is how you turn the
+  auto-generation off).
+- **Stop a foreground command** (`brief config`, `brief generate`, `./make_briefing.sh`):
+  press **Ctrl-C** in its terminal.
+- **A run launched by the scheduler in the background?** `pkill -f run_daily.sh` (or
+  `pkill -f make_briefing` / `pkill -f edge-tts` to interrupt a render).
 
 ## Configure
 
