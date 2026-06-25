@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # run_daily.sh — the scheduled daily job: generate → render → upload.
-# Invoked by launchd (see `brief schedule`). Logs to briefings/run-DATE.log.
+# Invoked by the scheduler — launchd/systemd/cron (see `brief schedule`). Logs to briefings/run-DATE.log.
 #
 set -uo pipefail
 cd "$(dirname "$0")"

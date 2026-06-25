@@ -213,7 +213,7 @@ def main(argv=None) -> None:
     pc.add_argument("--no-browser", action="store_true")
     pc.set_defaults(func=cmd_config)
 
-    ps = sub.add_parser("schedule", help="install/remove the daily macOS launchd run")
+    ps = sub.add_parser("schedule", help="install/remove the daily run (launchd/systemd/cron)")
     ps.add_argument("--uninstall", action="store_true")
     ps.set_defaults(func=cmd_schedule)
 

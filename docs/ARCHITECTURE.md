@@ -42,7 +42,7 @@ flowchart TD
         UPLOAD["save-to-spotify upload + poll READY"]
     end
 
-    SPOTIFY(["Spotify — Andrew's Daily Rundown"])
+    SPOTIFY(["Spotify (your show)"])
 
     subgraph LIVE["Phase 3 — live interaction"]
         ASK["/ask: timestamp → segment → grounded answer"]
