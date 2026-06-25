@@ -65,7 +65,7 @@ save-to-spotify shows create --title "My Daily Briefing"   # creates it, prints 
 save-to-spotify shows                                      # lists your shows + ids (id is column 1)
 ```
 
-The id is the **`show_uri`** — a string like `spotify:show:033AAkPmapL99eyKwK0UQO`. Paste the
+The id is the **`show_uri`** — a string like `spotify:show:0XXXXXXXXXXXXXXXXXXXXX`. Paste the
 whole thing (including the `spotify:show:` prefix) into the **SPOTIFY SHOW ID** field in
 `brief config`. The id is per **account**, so once created it shows up via `save-to-spotify
 shows` on any machine where you've run `auth login` with the same Spotify account (the token

@@ -4,7 +4,7 @@ from briefing.web.app import TONE_PRESETS, form_to_yaml, yaml_to_form
 
 def test_yaml_to_form_projects_values():
     profile = {
-        "owner": {"name": "Andrew Sousa"},
+        "owner": {"name": "Test User"},
         "interests": [{"topic": "technology", "weight": 1.0}, {"topic": "defense", "weight": 1.0},
                       {"topic": "business", "weight": 0.9}, {"topic": "science", "weight": 0.4}],
         "avoid": ["sports"], "must_cover": ["earnings"],
@@ -12,11 +12,11 @@ def test_yaml_to_form_projects_values():
     }
     config = {"episode": {"target_duration_minutes": 25}, "schedule": {"drop_time": "05:00"},
               "voices": {"AVA": "en-US-AriaNeural", "ANDREW": "en-US-GuyNeural"},
-              "spotify": {"show_id": "spotify:show:abc", "show_name": "Andrew's Rundown"}}
+              "spotify": {"show_id": "spotify:show:abc", "show_name": "Test Show"}}
     form = yaml_to_form(profile, config)
     assert form["show_id"] == "spotify:show:abc"
-    assert form["show_name"] == "Andrew's Rundown"
-    assert form["name"] == "Andrew Sousa"
+    assert form["show_name"] == "Test Show"
+    assert form["name"] == "Test User"
     # only weight==1.0 are headline focus (capped at 3); the rest are broader interests
     assert form["top"] == ["technology", "defense"]
     assert form["other"] == ["business", "science"]
@@ -89,29 +89,29 @@ def test_custom_feeds_round_trip_and_skip_builtins():
 
 def test_form_to_yaml_preserves_untouched_keys():
     profile = {
-        "owner": {"name": "Old", "location": {"city": "Natick"}},
+        "owner": {"name": "Old", "location": {"city": "Anytown"}},
         "interests": [{"topic": "defense", "weight": 0.9, "keywords": ["DoD"]}],
         "style": {"tone": "the rich Marketplace paragraph", "inspirations": ["Marketplace"]},
         "avoid": ["old"], "favor": ["stale"],
     }
     config = {"sources": [{"id": "wbur"}], "weather": {"latitude": 42.0},
               "llm": {"default_model": "claude-opus-4-8"}, "episode": {"target_duration_minutes": 25}}
-    form = {"name": "Andrew", "top": ["defense"], "other": ["ai startups"],
+    form = {"name": "Test User", "top": ["defense"], "other": ["ai startups"],
             "length": 20, "time": "08:00", "voice": "jenny_brian", "tone": 70,
-            "show_id": "spotify:show:xyz", "show_name": "Andrew's Rundown",
+            "show_id": "spotify:show:xyz", "show_name": "Test Show",
             "must_cover": ["earnings"], "avoid": ["celebrity"]}
 
     new_profile, new_config = form_to_yaml(form, profile, config)
 
     # patched
-    assert new_profile["owner"]["name"] == "Andrew"
+    assert new_profile["owner"]["name"] == "Test User"
     assert new_config["episode"]["target_duration_minutes"] == 20
     assert new_config["voices"]["AVA"] == "en-US-JennyNeural"     # the pair sets both
     assert new_config["voices"]["ANDREW"] == "en-US-BrianNeural"
     assert new_config["schedule"]["drop_time"] == "08:00"
     assert new_config["schedule"]["lead_hours"] == 2             # fixed build buffer kept
     assert new_config["spotify"]["show_id"] == "spotify:show:xyz"
-    assert new_config["spotify"]["show_name"] == "Andrew's Rundown"
+    assert new_config["spotify"]["show_name"] == "Test Show"
     assert new_profile["avoid"] == ["celebrity"]
     # must_cover is written; the legacy `favor` key is dropped
     assert new_profile["must_cover"] == ["earnings"]
@@ -130,4 +130,4 @@ def test_form_to_yaml_preserves_untouched_keys():
     assert new_config["sources"] == [{"id": "wbur"}]
     assert new_config["weather"] == {"latitude": 42.0}
     assert new_config["llm"] == {"default_model": "claude-opus-4-8"}
-    assert new_profile["owner"]["location"] == {"city": "Natick"}
+    assert new_profile["owner"]["location"] == {"city": "Anytown"}

@@ -1,4 +1,4 @@
-"""Pydantic models for the briefing pipeline (see docs/IMPLEMENTATION_PLAN.md)."""
+"""Pydantic models for the briefing pipeline (see docs/ARCHITECTURE.md)."""
 from __future__ import annotations
 
 from datetime import date, datetime

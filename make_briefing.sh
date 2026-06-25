@@ -3,7 +3,7 @@
 # make_briefing.sh — daily two-host audio-briefing pipeline
 #
 # Pipeline: briefing.txt --(render_briefing.py: edge-tts + ffmpeg)--> briefing-DATE.mp3
-#           --(save-to-spotify)--> "Andrew's Daily Rundown" on Spotify
+#           --(save-to-spotify)--> your show on Spotify
 #
 # Run from this directory:  ./make_briefing.sh
 # Cron-safe: uses the binary's full path (cron does not load ~/.bash_profile).
