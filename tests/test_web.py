@@ -5,18 +5,22 @@ from briefing.web.app import TONE_PRESETS, form_to_yaml, yaml_to_form
 def test_yaml_to_form_projects_values():
     profile = {
         "owner": {"name": "Andrew Sousa"},
-        "interests": [{"topic": "technology", "weight": 1.0}, {"topic": "defense", "weight": 0.9}],
+        "interests": [{"topic": "technology", "weight": 1.0}, {"topic": "defense", "weight": 1.0},
+                      {"topic": "business", "weight": 0.9}, {"topic": "science", "weight": 0.4}],
         "avoid": ["sports"], "must_cover": ["earnings"],
         "style": {"playfulness": 40, "tone": "rich paragraph"},
     }
     config = {"episode": {"target_duration_minutes": 25}, "schedule": {"drop_time": "05:00"},
               "voices": {"AVA": "en-US-AriaNeural", "ANDREW": "en-US-GuyNeural"},
-              "spotify": {"show_id": "spotify:show:abc"}}
+              "spotify": {"show_id": "spotify:show:abc", "show_name": "Andrew's Rundown"}}
     form = yaml_to_form(profile, config)
     assert form["show_id"] == "spotify:show:abc"
+    assert form["show_name"] == "Andrew's Rundown"
     assert form["name"] == "Andrew Sousa"
-    assert [t["topic"] for t in form["topics"]] == ["technology", "defense"]
-    assert form["topics"][1]["weight"] == 0.9       # weight carried into the form
+    # only weight==1.0 are headline focus (capped at 3); the rest are broader interests
+    assert form["top"] == ["technology", "defense"]
+    assert form["other"] == ["business", "science"]
+    assert "lead_hours" not in form                # build buffer no longer in the form
     assert form["length"] == 25
     assert form["time"] == "05:00"
     assert form["voice"] == "aria_guy"            # matched the Aria+Guy pair
@@ -55,11 +59,10 @@ def test_form_to_yaml_preserves_untouched_keys():
     }
     config = {"sources": [{"id": "wbur"}], "weather": {"latitude": 42.0},
               "llm": {"default_model": "claude-opus-4-8"}, "episode": {"target_duration_minutes": 25}}
-    form = {"name": "Andrew",
-            "topics": [{"topic": "defense", "weight": 0.9, "keywords": ["DoD"]},
-                       {"topic": "ai startups", "weight": 0.5, "keywords": []}],
+    form = {"name": "Andrew", "top": ["defense"], "other": ["ai startups"],
             "length": 20, "time": "08:00", "voice": "jenny_brian", "tone": 70,
-            "show_id": "spotify:show:xyz", "must_cover": ["earnings"], "avoid": ["celebrity"]}
+            "show_id": "spotify:show:xyz", "show_name": "Andrew's Rundown",
+            "must_cover": ["earnings"], "avoid": ["celebrity"]}
 
     new_profile, new_config = form_to_yaml(form, profile, config)
 
@@ -69,14 +72,16 @@ def test_form_to_yaml_preserves_untouched_keys():
     assert new_config["voices"]["AVA"] == "en-US-JennyNeural"     # the pair sets both
     assert new_config["voices"]["ANDREW"] == "en-US-BrianNeural"
     assert new_config["schedule"]["drop_time"] == "08:00"
+    assert new_config["schedule"]["lead_hours"] == 2             # fixed build buffer kept
     assert new_config["spotify"]["show_id"] == "spotify:show:xyz"
+    assert new_config["spotify"]["show_name"] == "Andrew's Rundown"
     assert new_profile["avoid"] == ["celebrity"]
     # must_cover is written; the legacy `favor` key is dropped
     assert new_profile["must_cover"] == ["earnings"]
     assert "favor" not in new_profile
-    # per-topic weight + keywords come straight from the form; freeform topic self-keywords
+    # top -> weight 1.0 (keeps existing keywords), other -> 0.5, freeform self-keywords
     by_topic = {i["topic"]: i for i in new_profile["interests"]}
-    assert by_topic["defense"]["weight"] == 0.9 and by_topic["defense"]["keywords"] == ["DoD"]
+    assert by_topic["defense"]["weight"] == 1.0 and by_topic["defense"]["keywords"] == ["DoD"]
     assert by_topic["ai startups"]["weight"] == 0.5
     assert by_topic["ai startups"]["keywords"] == ["ai startups"]
     # tone slider now writes the style.tone sentence the scriptwriter/editor actually read

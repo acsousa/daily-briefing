@@ -59,6 +59,7 @@ weather:
 
 spotify:
   show_id: "spotify:show:REPLACE_ME"
+  show_name: ""        # podcast show name; blank = auto "<First>'s Daily Briefing"
 
 episode:
   target_duration_minutes: 20
@@ -67,7 +68,7 @@ episode:
 # `lead_hours` before `drop_time` so the episode is ready by then.
 schedule:
   drop_time: "08:00"   # when you want it ready (set via `brief config`)
-  lead_hours: 2        # build/render/upload this many hours earlier
+  lead_hours: 2        # fixed build buffer — render/upload this many hours earlier
 
 # Cross-episode continuity windows (days). Threads briefed within recent_days with no
 # new developments are down-weighted; the editor recaps developing stories within month_days.

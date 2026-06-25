@@ -29,6 +29,10 @@ TAXONOMY = ["technology", "defense", "robotics", "business", "science", "health"
 # Region-of-focus suggestions (multi-select). Default is U.S.
 REGIONS = ["U.S.", "Europe", "Canada", "South America", "Asia"]
 
+# Interests come in two tiers the form presents simply: a few headline themes that set
+# the tone (TOP_WEIGHT), and a broader set that's also covered (OTHER_WEIGHT).
+TOP_WEIGHT, OTHER_WEIGHT, MAX_TOP = 1.0, 0.5, 3
+
 
 def _geocode(place: str):
     """Open-Meteo geocoding (no key) -> (lat, lon, city, state) or None."""
@@ -157,6 +161,20 @@ def _slug(s: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", (s or "").lower()).strip("_") or "feed"
 
 
+def _interest_tiers(profile: dict) -> dict:
+    """Bucket interests into headline focus (highest-weighted, up to MAX_TOP) and the rest.
+    Legacy profiles with assorted weights still bucket sensibly; the form re-normalizes
+    everything to TOP_WEIGHT / OTHER_WEIGHT on save."""
+    interests = [i for i in (profile.get("interests") or []) if isinstance(i, dict) and "topic" in i]
+    top, other = [], []
+    for i in sorted(interests, key=lambda x: -float(x.get("weight", 0))):
+        if float(i.get("weight", 0)) >= TOP_WEIGHT and len(top) < MAX_TOP:
+            top.append(i["topic"])
+        else:
+            other.append(i["topic"])
+    return {"top": top, "other": other}
+
+
 def yaml_to_form(profile: dict, config: dict) -> dict:
     """Project the current YAML into the form's value shape (for prefill)."""
     style = profile.get("style") or {}
@@ -165,15 +183,13 @@ def yaml_to_form(profile: dict, config: dict) -> dict:
         "name": owner.get("name", ""),
         "location": _location_str(owner),
         "regions": list(profile.get("regions") or ["U.S."]),
-        "topics": [{"topic": i["topic"], "weight": float(i.get("weight", 1.0)),
-                    "keywords": list(i.get("keywords") or [])}
-                   for i in profile.get("interests", []) if isinstance(i, dict) and "topic" in i],
+        **_interest_tiers(profile),                  # -> {"top": [...], "other": [...]}
         "length": int((config.get("episode") or {}).get("target_duration_minutes", 10)),
         "time": (config.get("schedule") or {}).get("drop_time", "08:00"),
-        "lead_hours": int((config.get("schedule") or {}).get("lead_hours", 2)),
         "quality": _quality_of(config.get("llm") or {}),
         "voice": _pair_for(config.get("voices") or {}),
         "show_id": (config.get("spotify") or {}).get("show_id", ""),
+        "show_name": (config.get("spotify") or {}).get("show_name", ""),
         "sources": [{"name": s.get("name", ""), "url": s.get("url", ""),
                      "topic": (s.get("topics") or [""])[0]}
                     for s in (config.get("sources") or []) if s.get("id") not in BUILTIN_IDS],
@@ -208,18 +224,26 @@ def form_to_yaml(form: dict, profile: dict, config: dict) -> tuple[dict, dict]:
     profile["owner"] = owner
     profile["regions"] = list(form.get("regions") or ["U.S."])
 
-    interests = []
-    for it in form.get("topics", []):               # each: {topic, weight, keywords} (or a bare string)
-        topic = (it.get("topic") if isinstance(it, dict) else it) or ""
-        topic = topic.strip()
-        if not topic:
-            continue
-        weight = float(it.get("weight", 1.0)) if isinstance(it, dict) else 1.0
-        weight = max(0.0, min(1.0, weight))
-        kws = list(it.get("keywords") or []) if isinstance(it, dict) else []
-        if not kws and topic not in TAXONOMY:       # a freeform topic keeps itself as a keyword
+    # Two tiers from the form -> interests. Keywords aren't edited here; preserve any the
+    # profile already has (the pipeline auto-matches on topic when there are none).
+    existing_kw = {i.get("topic"): list(i.get("keywords") or [])
+                   for i in (profile.get("interests") or []) if isinstance(i, dict)}
+    interests, seen = [], set()
+
+    def _add(topic, weight):
+        topic = (topic or "").strip()
+        if not topic or topic in seen:
+            return
+        seen.add(topic)
+        kws = existing_kw.get(topic, [])
+        if not kws and topic not in TAXONOMY:       # freeform topic keeps itself as a keyword seed
             kws = [topic]
-        interests.append({"topic": topic, "weight": round(weight, 2), "keywords": kws})
+        interests.append({"topic": topic, "weight": weight, "keywords": kws})
+
+    for topic in (form.get("top") or [])[:MAX_TOP]:
+        _add(topic, TOP_WEIGHT)
+    for topic in (form.get("other") or []):
+        _add(topic, OTHER_WEIGHT)
     profile["interests"] = interests
     profile["avoid"] = list(form.get("avoid", []))
     profile["must_cover"] = list(form.get("must_cover", []))
@@ -239,7 +263,7 @@ def form_to_yaml(form: dict, profile: dict, config: dict) -> tuple[dict, dict]:
 
     schedule = dict(config.get("schedule") or {})
     schedule["drop_time"] = form.get("time", "08:00")
-    schedule["lead_hours"] = int(form.get("lead_hours", schedule.get("lead_hours", 2)))
+    schedule.setdefault("lead_hours", 2)            # build buffer is fixed; not exposed in the form
     config["schedule"] = schedule
 
     quality = form.get("quality")
@@ -254,9 +278,12 @@ def form_to_yaml(form: dict, profile: dict, config: dict) -> tuple[dict, dict]:
     voices["ANDREW"] = pair["andrew"]
     config["voices"] = voices
 
-    if "show_id" in form:                           # Spotify show to publish to (optional)
+    if "show_id" in form or "show_name" in form:    # Spotify show to publish to (optional)
         spotify = dict(config.get("spotify") or {})
-        spotify["show_id"] = (form.get("show_id") or "").strip()
+        if "show_id" in form:
+            spotify["show_id"] = (form.get("show_id") or "").strip()
+        if "show_name" in form:
+            spotify["show_name"] = (form.get("show_name") or "").strip()
         config["spotify"] = spotify
 
     if "sources" in form:                           # user's own feeds (built-ins come from example)
@@ -292,13 +319,15 @@ def save_form(form: dict) -> None:
 FORM_FIELDS = {
     "owner.name", "owner.location.city", "owner.location.state",
     "interests", "regions", "must_cover", "avoid", "style.tone",
-    "sources", "weather.latitude", "weather.longitude", "spotify.show_id",
-    "episode.target_duration_minutes", "schedule.drop_time", "schedule.lead_hours",
+    "sources", "weather.latitude", "weather.longitude",
+    "spotify.show_id", "spotify.show_name",
+    "episode.target_duration_minutes", "schedule.drop_time",
     "llm.default_model", "llm.editor_model", "llm.script_model",
     "voices.AVA", "voices.ANDREW",
 }
 RAW_ONLY = {
     "owner.location.timezone", "limits.max_segments",
+    "schedule.lead_hours",                          # fixed build buffer, not exposed in the form
     "ingest.window_hours", "weather.provider",
     "continuity.recent_days", "continuity.week_days", "continuity.month_days",
     "ranking.weights.freshness", "ranking.weights.importance", "ranking.weights.interest",

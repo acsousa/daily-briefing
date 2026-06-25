@@ -21,6 +21,9 @@ config.yaml
 profile.yaml
 .env
 
+# Local backups of personal config (may contain secrets)
+.config-backups/
+
 # Local SQLite store
 *.db
 
