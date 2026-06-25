@@ -73,26 +73,30 @@ ok "Python dependencies installed"
 # to a generated bumper if they're absent, so this is best-effort.
 MUSIC_REPO="acsousa/daily-briefing"
 MUSIC_URL="https://github.com/$MUSIC_REPO/releases/latest/download/briefing-music.zip"
+MUSIC_ZIP="${BRIEF_MUSIC_ZIP:-briefing-music.zip}"   # a zip you placed here (scp'd in); gh-free
 if ls briefing/assets/*.mp3 >/dev/null 2>&1; then
   ok "bumper music present"
-elif have unzip; then
-  printf '  … fetching bumper music (optional)\n'
-  got=""
-  if have curl && curl -fsSL "$MUSIC_URL" -o /tmp/signal-music.zip 2>/dev/null; then
-    got=1                                  # public download
+elif ! have unzip; then
+  warn "unzip not available — skipping bumper music (a generated bumper is used instead)."
+else
+  printf '  … installing bumper music (optional)\n'
+  src=""
+  if [ -f "$MUSIC_ZIP" ]; then
+    src="$MUSIC_ZIP"                               # 1) a local zip dropped next to install.sh
+  elif have curl && curl -fsSL "$MUSIC_URL" -o /tmp/signal-music.zip 2>/dev/null; then
+    src="/tmp/signal-music.zip"                    # 2) public release download (no auth needed)
   elif have gh && gh release download --repo "$MUSIC_REPO" --pattern briefing-music.zip \
          --output /tmp/signal-music.zip --clobber 2>/dev/null; then
-    got=1                                  # private repo: authenticated via gh
+    src="/tmp/signal-music.zip"                    # 3) private release via gh, only if installed
   fi
-  if [ -n "$got" ] && unzip -oq /tmp/signal-music.zip -d briefing/assets 2>/dev/null; then
+  if [ -n "$src" ] && unzip -oq "$src" -d briefing/assets 2>/dev/null; then
     ok "bumper music installed ($(ls briefing/assets/*.mp3 2>/dev/null | wc -l | tr -d ' ') tracks)"
+    [ "$src" = "/tmp/signal-music.zip" ] && rm -f /tmp/signal-music.zip
   else
-    warn "couldn't fetch bumper music — using a generated bumper. While the repo is private, "
-    warn "  pull it with: gh release download -R $MUSIC_REPO -p briefing-music.zip && unzip -o briefing-music.zip -d briefing/assets"
+    warn "no bumper music yet — using a generated one. To add the tracks:"
+    warn "  download briefing-music.zip from the repo's Releases page, scp it into this folder,"
+    warn "  and re-run ./install.sh — or just drop your own no-lyric .mp3s into briefing/assets/."
   fi
-  rm -f /tmp/signal-music.zip
-else
-  warn "unzip not available — skipping bumper music (a generated bumper is used instead)."
 fi
 
 # ---- 4. .env (Anthropic API key) --------------------------------------------
