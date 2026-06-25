@@ -68,6 +68,24 @@ printf '  … installing Python dependencies (this can take a minute)\n'
 ./.venv/bin/pip install --quiet -e ".[dev]"
 ok "Python dependencies installed"
 
+# ---- 3b. bumper music (optional; fetched from the GitHub Release) ------------
+# Tracks aren't in git (see briefing/assets/ATTRIBUTION.md); the renderer falls back
+# to a generated bumper if they're absent, so this is best-effort.
+MUSIC_URL="https://github.com/acsousa/daily-briefing/releases/latest/download/briefing-music.zip"
+if ls briefing/assets/*.mp3 >/dev/null 2>&1; then
+  ok "bumper music present"
+elif have curl && have unzip; then
+  printf '  … fetching bumper music (optional)\n'
+  if curl -fsSL "$MUSIC_URL" -o /tmp/signal-music.zip 2>/dev/null && unzip -oq /tmp/signal-music.zip -d briefing/assets 2>/dev/null; then
+    ok "bumper music installed ($(ls briefing/assets/*.mp3 2>/dev/null | wc -l | tr -d ' ') tracks)"
+  else
+    warn "couldn't fetch bumper music — the renderer will use a generated bumper. Add your own .mp3s to briefing/assets/ anytime."
+  fi
+  rm -f /tmp/signal-music.zip
+else
+  warn "curl/unzip not available — skipping bumper music (a generated bumper is used instead)."
+fi
+
 # ---- 4. .env (Anthropic API key) --------------------------------------------
 if [ -f .env ] && grep -qE 'ANTHROPIC_API_KEY=sk-' .env; then
   ok ".env already has an API key"

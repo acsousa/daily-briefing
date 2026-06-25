@@ -21,8 +21,9 @@ your config → fetch real news → cluster · rank · plan → editor + scriptw
 | **Anthropic API key** | the editor + scriptwriter (Claude) | pay-as-you-go, <$1/episode — [console](https://platform.claude.com) |
 | **save-to-spotify** | publishes the episode so you can listen | or play the MP3 in any podcast/news app you like |
 
-A set of royalty-free bumper tracks ships in `briefing/assets/` — the music engine rotates
-them automatically. Drop your own no-lyric mp3s there to personalize it.
+`./install.sh` fetches a set of royalty-free bumper tracks into `briefing/assets/` (optional —
+a generated bumper is used if they're absent). Drop your own no-lyric mp3s there to
+personalize the rotation. Sources & license: [`briefing/assets/ATTRIBUTION.md`](briefing/assets/ATTRIBUTION.md).
 
 ## Setup
 
