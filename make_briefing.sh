@@ -19,15 +19,20 @@ STS="$(command -v save-to-spotify 2>/dev/null || true)"
 [ -z "$STS" ] && [ -x "/usr/local/bin/save-to-spotify" ] && STS="/usr/local/bin/save-to-spotify"
 # Show id + episode title come from config / profile (not hard-coded to one user).
 SHOW_ID="$("$PY" -c "from briefing.config import load_config; print((load_config().get('spotify') or {}).get('show_id',''))" 2>/dev/null || true)"
-TITLE="$("$PY" - <<'PY' 2>/dev/null || echo 'Daily Briefing'
-from briefing.config import load_config, load_profile
-name = ((load_config().get('spotify') or {}).get('show_name') or '').strip()
-if not name:
-    n = ((load_profile().get('owner') or {}).get('name') or '').split()
-    name = (n[0] + "'s Daily Briefing") if n else 'Daily Briefing'
-print(name)
+# Episode title = the show name. Prefer config spotify.show_name; otherwise ask Spotify
+# for the real show title (authoritative); otherwise fall back to "<First>'s Daily Briefing".
+TITLE="$("$PY" -c "from briefing.config import load_config; print(((load_config().get('spotify') or {}).get('show_name') or '').strip())" 2>/dev/null || true)"
+if [ -z "$TITLE" ] && [ -n "${STS:-}" ] && [ -x "$STS" ] && [ -n "${SHOW_ID:-}" ]; then
+  TITLE="$("$STS" --json shows 2>/dev/null | "$PY" -c 'import sys,json;sid=sys.argv[1];d=json.load(sys.stdin).get("shows",[]);m=[s for s in d if s.get("show_uri")==sid];print(m[0]["title"] if m else "")' "$SHOW_ID" 2>/dev/null || true)"
+fi
+if [ -z "$TITLE" ]; then
+  TITLE="$("$PY" - <<'PY' 2>/dev/null || echo 'Daily Briefing'
+from briefing.config import load_profile
+n = ((load_profile().get('owner') or {}).get('name') or '').split()
+print((n[0] + "'s Daily Briefing") if n else 'Daily Briefing')
 PY
 )"
+fi
 # Voice / tempo / gaps / music are configured under render: in config.yaml
 # -----------------------------------------------------------------------------
 
