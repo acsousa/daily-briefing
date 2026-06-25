@@ -36,3 +36,28 @@ def test_every_example_field_is_classified():
 
 def test_form_and_raw_are_disjoint():
     assert not (FORM_FIELDS & RAW_ONLY), sorted(FORM_FIELDS & RAW_ONLY)
+
+
+def _dig(d, dotted):
+    cur = d
+    for part in dotted.split("."):
+        if not isinstance(cur, dict) or part not in cur:
+            return False
+        cur = cur[part]
+    return True
+
+
+def test_form_save_preserves_raw_only_keys():
+    """The definitive data-loss guard: a real example round-trip through the form
+    (yaml_to_form -> form_to_yaml, as SAVE CONFIG does) must not drop any raw-only
+    key — ranking weights, render/music, continuity, limits, etc."""
+    from briefing.web.app import form_to_yaml, yaml_to_form
+    profile = yaml.safe_load((config.REPO_ROOT / "profile.example.yaml").read_text()) or {}
+    cfg = yaml.safe_load((config.REPO_ROOT / "config.example.yaml").read_text()) or {}
+    new_profile, new_config = form_to_yaml(yaml_to_form(profile, cfg), profile, cfg)
+    for path in RAW_ONLY:
+        present_before = _dig(profile, path) or _dig(cfg, path)
+        if not present_before:
+            continue  # not shipped in the example; nothing to preserve
+        assert _dig(new_profile, path) or _dig(new_config, path), \
+            f"SAVE CONFIG dropped raw-only key: {path}"

@@ -33,6 +33,15 @@ def test_yaml_to_form_migrates_legacy_favor_to_must_cover():
     assert form["must_cover"] == ["earnings"]
 
 
+def test_tone_slider_sets_tone_when_empty_or_preset():
+    # empty tone -> slider writes the preset
+    p, _ = form_to_yaml({"tone": 10}, {}, {})
+    assert p["style"]["tone"] == TONE_PRESETS["ANALYTICAL"]
+    # an existing preset -> slider may switch it to another preset
+    p2, _ = form_to_yaml({"tone": 90}, {"style": {"tone": TONE_PRESETS["ANALYTICAL"]}}, {})
+    assert p2["style"]["tone"] == TONE_PRESETS["PLAYFUL"]
+
+
 def test_custom_feeds_round_trip_and_skip_builtins():
     from briefing.web.app import BUILTIN_IDS
     builtin = next(iter(BUILTIN_IDS))                  # any shipped feed id
@@ -84,10 +93,10 @@ def test_form_to_yaml_preserves_untouched_keys():
     assert by_topic["defense"]["weight"] == 1.0 and by_topic["defense"]["keywords"] == ["DoD"]
     assert by_topic["ai startups"]["weight"] == 0.5
     assert by_topic["ai startups"]["keywords"] == ["ai startups"]
-    # tone slider now writes the style.tone sentence the scriptwriter/editor actually read
+    # slider tracks the label/position, but a hand-written tone sentence is preserved
     assert new_profile["style"]["playfulness"] == 70
     assert new_profile["style"]["tone_label"] == "PLAYFUL"
-    assert new_profile["style"]["tone"] == TONE_PRESETS["PLAYFUL"]
+    assert new_profile["style"]["tone"] == "the rich Marketplace paragraph"
     assert new_profile["style"]["inspirations"] == ["Marketplace"]   # unknown style keys preserved
     # untouched operational keys preserved
     assert new_config["sources"] == [{"id": "wbur"}]

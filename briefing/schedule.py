@@ -6,6 +6,7 @@ Picks the right mechanism for the OS automatically:
 """
 from __future__ import annotations
 
+import getpass
 import platform
 import plistlib
 import shutil
@@ -93,7 +94,7 @@ def _install_systemd(hour, minute):
     (SYSTEMD_DIR / f"{SYSTEMD_UNIT}.service").write_text(
         "[Unit]\nDescription=SIGNAL daily briefing\n\n"
         "[Service]\nType=oneshot\n"
-        f"WorkingDirectory={REPO_ROOT}\nExecStart=/bin/bash {RUNNER}\n")
+        f"WorkingDirectory={REPO_ROOT}\nExecStart=/bin/bash '{RUNNER}'\n")
     (SYSTEMD_DIR / f"{SYSTEMD_UNIT}.timer").write_text(
         "[Unit]\nDescription=SIGNAL daily briefing timer\n\n"
         f"[Timer]\nOnCalendar=*-*-* {hour:02d}:{minute:02d}:00\nPersistent=true\n\n"
@@ -101,7 +102,7 @@ def _install_systemd(hour, minute):
     subprocess.run(["systemctl", "--user", "daemon-reload"], check=True, capture_output=True)
     subprocess.run(["systemctl", "--user", "enable", "--now", f"{SYSTEMD_UNIT}.timer"],
                    check=True, capture_output=True)
-    subprocess.run(["loginctl", "enable-linger", str(Path.home().name)], capture_output=True)
+    subprocess.run(["loginctl", "enable-linger", getpass.getuser()], capture_output=True)
 
 
 def _uninstall_systemd():
@@ -114,7 +115,7 @@ def _uninstall_systemd():
 
 # ---- Linux cron -------------------------------------------------------------
 def _cron_line(hour, minute) -> str:
-    return f"{minute} {hour} * * * {RUNNER} {CRON_MARKER}"
+    return f'{minute} {hour} * * * "{RUNNER}" {CRON_MARKER}'
 
 
 def _read_crontab() -> list[str]:

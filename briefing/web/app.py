@@ -254,7 +254,11 @@ def form_to_yaml(form: dict, profile: dict, config: dict) -> tuple[dict, dict]:
     label = _tone_label(tone)
     style["playfulness"] = tone                     # remembers the slider position for round-trip
     style["tone_label"] = label
-    style["tone"] = TONE_PRESETS[label]             # the sentence the scriptwriter/editor read
+    # The slider sets the tone sentence the scriptwriter/editor read — but never clobbers a
+    # hand-written one. A custom style.tone (not one of our presets) is preserved as-is.
+    current = (style.get("tone") or "").strip()
+    if not current or current in TONE_PRESETS.values():
+        style["tone"] = TONE_PRESETS[label]
     profile["style"] = style
 
     episode = dict(config.get("episode") or {})

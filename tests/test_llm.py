@@ -66,3 +66,9 @@ def test_preflight_blocks_without_sources(monkeypatch):
 def test_preflight_passes_with_key_and_sources(monkeypatch):
     monkeypatch.setattr(cli.os, "getenv", lambda k, d="": "sk-ant-x" if k == "ANTHROPIC_API_KEY" else d)
     cli._preflight({"sources": [{"id": "x"}]})   # no raise
+
+
+def test_preflight_allows_oauth_token_without_api_key(monkeypatch):
+    env = {"ANTHROPIC_API_KEY": "", "ANTHROPIC_AUTH_TOKEN": "tok-123"}
+    monkeypatch.setattr(cli.os, "getenv", lambda k, d="": env.get(k, d))
+    cli._preflight({"sources": [{"id": "x"}]})   # token auth -> no API key required, no raise

@@ -64,8 +64,10 @@ def _recent_articles(store, window_hours) -> list[RawArticle]:
 def _preflight(config) -> None:
     """Fail fast before any network/LLM work if the run can't possibly succeed."""
     from .llm import REPO_ROOT  # triggers .env load
+    # OAuth / token auth (`ant auth login`, ANTHROPIC_AUTH_TOKEN) authenticates with no
+    # API key set, so only enforce ANTHROPIC_API_KEY when no auth token is present.
     key = os.getenv("ANTHROPIC_API_KEY", "")
-    if not key or "REPLACE" in key or not key.startswith("sk-"):
+    if not os.getenv("ANTHROPIC_AUTH_TOKEN") and (not key or "REPLACE" in key or not key.startswith("sk-")):
         raise SystemExit(
             "ANTHROPIC_API_KEY is not set. Add it to .env "
             f"({REPO_ROOT / '.env'}) — e.g. ANTHROPIC_API_KEY=sk-ant-... "
