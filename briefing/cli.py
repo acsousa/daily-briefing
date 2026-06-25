@@ -3,8 +3,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from datetime import date, datetime, timedelta, timezone
-from pathlib import Path
 
 from .cluster import cluster_articles
 from .config import load_config, load_profile
@@ -14,12 +14,12 @@ from .ingest import FeedAdapter, dedupe, filter_relevant
 from .ingest.extract import fetch_fulltext
 from .ingest.opinion import is_opinion
 from .ingest.weather import get_forecast
+from .paths import REPO_ROOT
 from .plan import build_plan
 from .rank import rank_clusters
 from .script import write_script
 from .store import RawArticle, Store, StoryThread
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DB = str(REPO_ROOT / "briefing.db")
 BRIEFINGS_DIR = REPO_ROOT / "briefings"
 MAX_FULLTEXT_PER_CLUSTER = 3
@@ -61,11 +61,28 @@ def _recent_articles(store, window_hours) -> list[RawArticle]:
             if a.published_at.replace(tzinfo=a.published_at.tzinfo or timezone.utc) >= cutoff]
 
 
+def _preflight(config) -> None:
+    """Fail fast before any network/LLM work if the run can't possibly succeed."""
+    from .llm import REPO_ROOT  # triggers .env load
+    # OAuth / token auth (`ant auth login`, ANTHROPIC_AUTH_TOKEN) authenticates with no
+    # API key set, so only enforce ANTHROPIC_API_KEY when no auth token is present.
+    key = os.getenv("ANTHROPIC_API_KEY", "")
+    if not os.getenv("ANTHROPIC_AUTH_TOKEN") and (not key or "REPLACE" in key or not key.startswith("sk-")):
+        raise SystemExit(
+            "ANTHROPIC_API_KEY is not set. Add it to .env "
+            f"({REPO_ROOT / '.env'}) — e.g. ANTHROPIC_API_KEY=sk-ant-... "
+            "(or use --dry-run to plan without the API).")
+    if not config.get("sources"):
+        raise SystemExit("no sources configured — see config.example.yaml")
+
+
 def cmd_generate(args) -> None:
     config = load_config()
     profile = load_profile()
     if args.minutes:
         config.setdefault("episode", {})["target_duration_minutes"] = args.minutes
+    if not args.dry_run:
+        _preflight(config)
     today = date.today()
     store = Store(args.db)
 
@@ -157,20 +174,20 @@ def cmd_generate(args) -> None:
 
 def cmd_config(args) -> None:
     from .web import serve
-    serve(port=args.port, open_browser=not args.no_browser)
+    serve(host=args.host, port=args.port, open_browser=not args.no_browser)
 
 
 def cmd_schedule(args) -> None:
     from . import schedule
     if args.uninstall:
-        schedule.uninstall()
-        print("daily schedule removed")
+        print(f"daily schedule removed ({schedule.uninstall()})")
         return
-    hour, minute = schedule.install()
+    hour, minute, mech = schedule.install()
     sched = load_config().get("schedule") or {}
-    print(f"daily briefing scheduled at {hour:02d}:{minute:02d} "
+    print(f"daily briefing scheduled at {hour:02d}:{minute:02d} via {mech} "
           f"(drop {sched.get('drop_time', '08:00')} − {sched.get('lead_hours', 2)}h). "
-          f"Mac must be awake or asleep (not off); it runs on wake if missed.")
+          f"The machine must be on at that time; missed runs catch up on the next "
+          f"{'wake' if mech == 'launchd' else 'boot'}.")
 
 
 def main(argv=None) -> None:
@@ -191,10 +208,12 @@ def main(argv=None) -> None:
 
     pc = sub.add_parser("config", help="open the SIGNAL web UI to edit profile.yaml/config.yaml")
     pc.add_argument("--port", type=int, default=8765)
+    pc.add_argument("--host", default="127.0.0.1",
+                    help="bind address; use 0.0.0.0 for remote access (prefer an SSH tunnel)")
     pc.add_argument("--no-browser", action="store_true")
     pc.set_defaults(func=cmd_config)
 
-    ps = sub.add_parser("schedule", help="install/remove the daily macOS launchd run")
+    ps = sub.add_parser("schedule", help="install/remove the daily run (launchd/systemd/cron)")
     ps.add_argument("--uninstall", action="store_true")
     ps.set_defaults(func=cmd_schedule)
 

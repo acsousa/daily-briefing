@@ -1,5 +1,6 @@
 # Personal interests & style. Copy to profile.yaml (gitignored) and make it yours.
-# Feeds ranking (topic weights + keywords) and scripting (style + host personas).
+# Feeds ranking (topic weights + keywords) and scripting (tone). Easiest path is the
+# config page (`brief config`); this file is the source of truth it reads and writes.
 # With no profile.yaml, this generic example is used.
 #
 # `topic` values use the shared taxonomy that sources are tagged with:
@@ -12,6 +13,8 @@ owner:
   name: Your Name
   location: { city: "", state: "", timezone: America/New_York }
 
+# Each interest: a topic, its ranking weight (0–1, higher = more prominent), and
+# optional keywords that boost matching stories and keep them through ingestion.
 interests:
   - { topic: technology, weight: 1.0, keywords: [AI, software, hardware] }
   - { topic: business,   weight: 0.8, keywords: [markets, economy, earnings] }
@@ -22,17 +25,9 @@ interests:
 regions: [U.S.]                      # geographic focus (boosts ranking): U.S./Europe/Canada/South America/Asia
 must_cover: []                       # topics to always include if anything qualifies
 avoid: []                            # topics/keywords to drop outright
-limits: { max_world_headlines: 2, max_segments: 8 }
+limits: { max_segments: 8 }          # cap on body segments per episode
 
 style:
-  inspirations: []                   # podcasts/shows whose tone you like
-  tone: "Smart, concise, conversational. Substance over hype."
-  reading_level: informed general
-  banned: [clickbait, filler]
-  hosts:
-    AVA:    { role: anchor,  voice: en-US-AvaNeural }
-    ANDREW: { role: analyst, voice: en-US-AndrewNeural }
-
-episode:
-  open_with: weather
-  segment_order: [weather, top_story, world, science_kicker]
+  # The scriptwriter + editor read this sentence. The config page's tone slider
+  # rewrites it from a preset; edit here directly for a fully custom voice.
+  tone: "Smart, concise, conversational. Substance over hype, with a light human touch."

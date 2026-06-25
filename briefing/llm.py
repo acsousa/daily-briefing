@@ -6,22 +6,20 @@ importing this module never requires a key — only an actual call does.
 """
 from __future__ import annotations
 
-from pathlib import Path
-
 from dotenv import load_dotenv
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+from .paths import REPO_ROOT
+
 load_dotenv(REPO_ROOT / ".env")  # no-op if absent
 
 
 class LLM:
-    def __init__(self, config: dict):
+    def __init__(self, config: dict, client=None):
         cfg = config.get("llm", {})
         self.default_model = cfg.get("default_model", "claude-sonnet-4-6")
         self.editor_model = cfg.get("editor_model", self.default_model)
         self.script_model = cfg.get("script_model", self.default_model)
-        self.effort = cfg.get("effort", "high")
-        self._client = None
+        self._client = client                      # injectable for tests
 
     @property
     def client(self):

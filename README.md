@@ -1,109 +1,110 @@
 # SIGNAL — your daily intelligence briefing
 
-SIGNAL turns the day's news into a personalized, two-host audio briefing and publishes it
-to your Spotify every morning — automatically, on a schedule. You set your interests, length,
-voices, and tone once; each day it sources real news, writes a grounded script in the style of
-*Marketplace*, narrates it with two AI hosts, and uploads the episode before your commute.
+SIGNAL turns each day's news into a personalized, two-host audio briefing and (optionally)
+publishes it to your Spotify every morning — automatically. You set your interests, length,
+voices, and tone once; each day it sources real news, writes a grounded, news-first script
+in the style of *Marketplace*, narrates it with two AI hosts over music, and produces an MP3.
+
+Runs on **macOS and Linux**.
 
 ```
-your interests → fetch real news → cluster · rank · plan → editor + scriptwriter (Claude)
-   → two-host audio (edge-tts + ffmpeg, with music stings) → publish to Spotify
+your config → fetch real news → cluster · rank · plan → editor + scriptwriter (Claude)
+   → two-host audio (edge-tts + ffmpeg, your music) → MP3 → (optional) Spotify
 ```
 
-## Features
+## What you need
 
-- **Personalized.** A topic-weighted interest profile (tech, defense, business, science, …)
-  decides what's covered; a relevance filter keeps only what's yours and drops the rest.
-- **Genuinely good copy.** An editorial pass (Claude Opus) finds the tension in each story and
-  the connections across them; a scriptwriter turns it into conversational two-host dialogue —
-  substance first, market-moves as a footnote, dry wit, no jargon.
-- **Grounded, not hallucinated.** Every claim traces to a fetched source; facts stay separate
-  from analysis; nothing is invented.
-- **Continuity.** It remembers what it told you across days/weeks and builds on developing
-  stories instead of repeating them.
-- **Two AI hosts, your voices.** Pick a male/female voice pair; natural pacing, verbal
-  hand-offs, and short music stings between segments.
-- **Commute-length control.** A 5–30 minute slider; a sanity check flags if a build drifts
-  from your target.
-- **Hands-off.** A one-screen web config and a daily macOS schedule — set it and forget it.
+| Requirement | Why | Notes |
+|---|---|---|
+| **Python 3.11+** | runs the pipeline | macOS or Linux |
+| **ffmpeg** | stitches the audio | `brew install ffmpeg` / `apt install ffmpeg` |
+| **Anthropic API key** | the editor + scriptwriter (Claude) | pay-as-you-go, <$1/episode — [console](https://platform.claude.com) |
+| **save-to-spotify** | publishes the episode so you can listen | or play the MP3 in any podcast/news app you like |
 
-## Requirements
-
-| Need | Why |
-|------|-----|
-| **macOS**, **Python 3.11+** | the pipeline + the daily scheduler (launchd) |
-| **ffmpeg** (`brew install ffmpeg`) | stitches the audio |
-| **Anthropic API key** | the editor + scriptwriter (Claude). Pay-as-you-go; ~$1–3/episode |
-| **Spotify `save-to-spotify` CLI** | publishes the episode (free, official Spotify CLI) |
+`./install.sh` fetches a set of royalty-free bumper tracks into `briefing/assets/` (optional —
+a generated bumper is used if they're absent). Drop your own no-lyric mp3s there to
+personalize the rotation. Sources & license: [`briefing/assets/ATTRIBUTION.md`](briefing/assets/ATTRIBUTION.md).
 
 ## Setup
 
 ```sh
-# 1. Install
+# 1. Get the code
 git clone https://github.com/acsousa/daily-briefing.git
 cd daily-briefing
-python3 -m venv .venv && .venv/bin/pip install -e ".[dev]"
-brew install ffmpeg
 
-# 2. Add your Anthropic API key (gitignored)
-echo 'ANTHROPIC_API_KEY=sk-ant-...' > .env
+# 2. One-shot install — Python venv + deps, ffmpeg, and your .env
+./install.sh               # idempotent; prompts for ffmpeg + your Anthropic API key
 
-# 3. Install + authenticate the Spotify CLI (one-time browser login)
-#    See docs/SAVE_TO_SPOTIFY_SETUP.md for the install command.
-save-to-spotify auth login
+# 3. Activate the env (now `brief` works without a path prefix)
+source .venv/bin/activate
 
-# 4. Set your preferences (opens the SIGNAL web UI)
-.venv/bin/brief config
+# 4. Configure everything in the browser — name, interests, voices, show name, Spotify id
+brief config               # opens http://127.0.0.1:8765
 
-# 5. Build & publish today's episode once to confirm it works
-.venv/bin/brief generate && ./make_briefing.sh
-
-# 6. Schedule it to run every day on your Mac
-.venv/bin/brief schedule
+# 5. Build today's episode
+brief generate             # → briefings/briefing.txt + episode.json
+./make_briefing.sh         # render to MP3, then publish to your show
 ```
 
-### Required inputs
+`./install.sh` is safe to re-run and won't clobber your `.env` or config. If you'd rather do
+it by hand, the steps it runs are right there in [`install.sh`](install.sh).
 
-- **`ANTHROPIC_API_KEY`** in `.env` (the only secret).
-- **Spotify auth** via `save-to-spotify auth login` (one-time).
-- **Your preferences** via `brief config` (name, interests, length, drop time, voices, tone,
-  favor/avoid) — saved to `profile.yaml` / `config.yaml`.
-
-## Usage
+### Publish to Spotify (optional)
 
 ```sh
-brief config            # web UI to edit your preferences (writes profile.yaml/config.yaml)
-brief generate          # build today's script → briefings/briefing.txt + episode.json
-brief generate --dry-run   # plan only, no API calls
-./make_briefing.sh      # render the script to audio and publish to Spotify
-brief schedule          # install the daily run (drop_time − lead_hours); --uninstall to remove
+curl -fsSL https://saveto.spotify.com/install.sh | bash   # detects your OS/arch
+save-to-spotify auth login                                # one-time browser login
 ```
 
-The daily schedule runs `lead_hours` before your `drop_time` (default: 2 hours before 8 AM →
-6 AM). Your Mac must be awake or asleep — launchd runs the job on wake if it was missed; it
-won't run while fully powered off.
+Then put your **show id** in `brief config` (run `save-to-spotify shows` to find it). If it's
+not set, `make_briefing.sh` just **skips the upload** and leaves you the MP3 to play in any
+podcast/news app.
 
-## Configuration
+### Run it daily (optional)
 
-Two user files (gitignored; copy from the committed `*.example.yaml`, or just use `brief config`):
+```sh
+brief schedule          # install the daily run; --uninstall to remove
+```
 
-- **`profile.yaml`** — *you*: interests + weights, style/tone, host personas, favor/avoid.
-- **`config.yaml`** — *operational*: source feeds, weather location, target length, drop time,
-  voices, and the LLM models. A broad default source catalog is inherited from
-  `config.example.yaml`; add your own (e.g. local) feeds.
+It builds a fixed **2 hours** before your `drop_time` (set in `brief config`). The mechanism is
+chosen for your OS automatically: **launchd** on macOS, a **systemd user timer** on Linux
+(or **cron** if systemd isn't available). The machine must be on at that time.
 
-## How it works
+## Configure
 
-`brief generate` runs ingest → cluster → rank (with novelty vs. prior episodes) → plan
-(duration-budgeted) → fetch full text → **editor** (Claude Opus) → **scriptwriter** (Claude)
-→ `briefing.txt` + `episode.json`. `make_briefing.sh` renders the two voices with edge-tts,
-stitches with ffmpeg (music stings between segments), and uploads via the Spotify CLI.
-Architecture detail: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+`brief config` is the easy path — it writes two gitignored files (seeded from the committed
+`*.example.yaml`):
+
+- **`profile.yaml`** — you: headline focus + broader interests, region of focus, tone.
+- **`config.yaml`** — operational: source feeds, weather location, length, voices, drop
+  time, music, Spotify show, and the Claude models.
+
+The page covers everything; deep knobs (ranking weights, always-cover/avoid, music) live under
+its **Advanced** section.
+
+## Commands
+
+```sh
+brief config                 # web UI to edit your preferences
+brief generate               # build today's script (briefing.txt + episode.json)
+brief generate --dry-run     # plan only, no API calls
+brief ingest                 # just fetch + filter + store articles
+brief schedule               # install/uninstall the daily run
+./make_briefing.sh           # render the script to audio (+ optional publish)
+```
+
+(Commands assume the venv is active — `source .venv/bin/activate`. Otherwise prefix with
+`.venv/bin/`.)
+
+Remote Linux server? `brief config` binds localhost; reach it over an SSH tunnel
+(`ssh -L 8765:127.0.0.1:8765 you@server`) or edit the YAML directly.
 
 ## Notes
 
-- Episodes are **personal content** on Spotify (per Spotify, can't be shared). Audio is stored
-  on Spotify's servers and subject to their moderation — don't put sensitive info in a briefing.
+- The `generate → script → audio` core is fully platform-independent.
+- Episodes on Spotify are personal content; audio is stored on Spotify's servers and subject
+  to their moderation — don't put sensitive info in a briefing.
 - The Claude API is pay-as-you-go and separate from a Claude.ai subscription; add credits at
   platform.claude.com.
-- Built on the official Spotify [`save-to-spotify`](https://github.com/spotify/save-to-spotify) CLI.
+
+Architecture detail: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
