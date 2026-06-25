@@ -33,6 +33,34 @@ def test_yaml_to_form_migrates_legacy_favor_to_must_cover():
     assert form["must_cover"] == ["earnings"]
 
 
+def test_autofill_show_prefills_when_unset(monkeypatch):
+    import briefing.web.app as app
+    monkeypatch.setattr(app, "_spotify_shows",
+                        lambda: [{"uri": "spotify:show:abc", "title": "My Show"}])
+    out = app._autofill_show({"show_id": "", "show_name": ""})
+    assert out["show_id"] == "spotify:show:abc" and out["show_name"] == "My Show"
+    # never overrides an id the user already set, and won't clobber a custom name
+    kept = app._autofill_show({"show_id": "spotify:show:keep", "show_name": "Mine"})
+    assert kept["show_id"] == "spotify:show:keep" and kept["show_name"] == "Mine"
+
+
+def test_autofill_show_noop_when_no_cli(monkeypatch):
+    import briefing.web.app as app
+    monkeypatch.setattr(app, "_spotify_shows", lambda: [])
+    assert app._autofill_show({"show_id": "", "show_name": ""}) == {"show_id": "", "show_name": ""}
+
+
+def test_autofill_show_treats_example_placeholder_as_unset(monkeypatch):
+    import briefing.web.app as app
+    monkeypatch.setattr(app, "_spotify_shows",
+                        lambda: [{"uri": "spotify:show:real", "title": "Real"}])
+    out = app._autofill_show({"show_id": "spotify:show:REPLACE_ME", "show_name": ""})
+    assert out["show_id"] == "spotify:show:real"
+    # and with no CLI shows, the placeholder is cleared rather than shown
+    monkeypatch.setattr(app, "_spotify_shows", lambda: [])
+    assert app._autofill_show({"show_id": "spotify:show:REPLACE_ME", "show_name": ""})["show_id"] == ""
+
+
 def test_tone_slider_sets_tone_when_empty_or_preset():
     # empty tone -> slider writes the preset
     p, _ = form_to_yaml({"tone": 10}, {}, {})

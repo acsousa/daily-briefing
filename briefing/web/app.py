@@ -10,6 +10,8 @@ import json
 import os
 import platform
 import re
+import shutil
+import subprocess
 import urllib.parse
 import urllib.request
 import webbrowser
@@ -159,6 +161,47 @@ BUILTIN_IDS = {s.get("id") for s in _builtin_sources()}
 
 def _slug(s: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", (s or "").lower()).strip("_") or "feed"
+
+
+def _save_to_spotify_bin() -> str:
+    """Resolve the save-to-spotify CLI (PATH, then the usual install dirs)."""
+    found = shutil.which("save-to-spotify")
+    if found:
+        return found
+    for p in (Path.home() / ".local/bin/save-to-spotify", Path("/usr/local/bin/save-to-spotify")):
+        if p.exists():
+            return str(p)
+    return ""
+
+
+def _spotify_shows() -> list[dict]:
+    """Best-effort list of Spotify shows for the authed account (CLI-created). [] on any error."""
+    sts = _save_to_spotify_bin()
+    if not sts:
+        return []
+    try:
+        r = subprocess.run([sts, "--json", "shows"], capture_output=True, text=True, timeout=15)
+        data = json.loads(r.stdout or "{}")
+        return [{"uri": s.get("show_uri", ""), "title": s.get("title", "")}
+                for s in (data.get("shows") or []) if s.get("show_uri")]
+    except Exception:
+        return []
+
+
+def _autofill_show(form: dict) -> dict:
+    """If the config has no real show id (unset, or the example's REPLACE_ME placeholder),
+    pre-fill it (and the show name) from a Spotify show the save-to-spotify CLI can see.
+    Never overrides an id the user already set."""
+    current = (form.get("show_id") or "").strip()
+    if current and "REPLACE" not in current:
+        return form
+    form["show_id"] = ""                              # drop the example placeholder
+    shows = _spotify_shows()
+    if shows:
+        form["show_id"] = shows[0]["uri"]
+        if not form.get("show_name"):
+            form["show_name"] = shows[0]["title"]
+    return form
 
 
 def _interest_tiers(profile: dict) -> dict:
@@ -357,7 +400,8 @@ class Handler(BaseHTTPRequestHandler):
         if self.path in ("/", "/index.html"):
             self._send(200, (STATIC / "index.html").read_bytes(), "text/html; charset=utf-8")
         elif self.path == "/api/config":
-            self._send(200, json.dumps(yaml_to_form(_read_yaml("profile"), _read_yaml("config"))))
+            form = _autofill_show(yaml_to_form(_read_yaml("profile"), _read_yaml("config")))
+            self._send(200, json.dumps(form))
         elif self.path == "/api/meta":
             from ..schedule import mechanism
             builtin = [{"name": s.get("name", s.get("id", "")), "topics": s.get("topics", [])}
