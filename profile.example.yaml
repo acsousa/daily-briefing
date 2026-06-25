@@ -25,7 +25,7 @@ interests:
 regions: [U.S.]                      # geographic focus (boosts ranking): U.S./Europe/Canada/South America/Asia
 must_cover: []                       # topics to always include if anything qualifies
 avoid: []                            # topics/keywords to drop outright
-limits: { max_segments: 8 }          # cap on body segments per episode
+limits: { max_segments: 12 }         # cap on body segments per episode (story count scales with length)
 
 style:
   # The scriptwriter + editor read this sentence. The config page's tone slider

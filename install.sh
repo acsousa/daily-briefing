@@ -71,19 +71,28 @@ ok "Python dependencies installed"
 # ---- 3b. bumper music (optional; fetched from the GitHub Release) ------------
 # Tracks aren't in git (see briefing/assets/ATTRIBUTION.md); the renderer falls back
 # to a generated bumper if they're absent, so this is best-effort.
-MUSIC_URL="https://github.com/acsousa/daily-briefing/releases/latest/download/briefing-music.zip"
+MUSIC_REPO="acsousa/daily-briefing"
+MUSIC_URL="https://github.com/$MUSIC_REPO/releases/latest/download/briefing-music.zip"
 if ls briefing/assets/*.mp3 >/dev/null 2>&1; then
   ok "bumper music present"
-elif have curl && have unzip; then
+elif have unzip; then
   printf '  … fetching bumper music (optional)\n'
-  if curl -fsSL "$MUSIC_URL" -o /tmp/signal-music.zip 2>/dev/null && unzip -oq /tmp/signal-music.zip -d briefing/assets 2>/dev/null; then
+  got=""
+  if have curl && curl -fsSL "$MUSIC_URL" -o /tmp/signal-music.zip 2>/dev/null; then
+    got=1                                  # public download
+  elif have gh && gh release download --repo "$MUSIC_REPO" --pattern briefing-music.zip \
+         --output /tmp/signal-music.zip --clobber 2>/dev/null; then
+    got=1                                  # private repo: authenticated via gh
+  fi
+  if [ -n "$got" ] && unzip -oq /tmp/signal-music.zip -d briefing/assets 2>/dev/null; then
     ok "bumper music installed ($(ls briefing/assets/*.mp3 2>/dev/null | wc -l | tr -d ' ') tracks)"
   else
-    warn "couldn't fetch bumper music — the renderer will use a generated bumper. Add your own .mp3s to briefing/assets/ anytime."
+    warn "couldn't fetch bumper music — using a generated bumper. While the repo is private, "
+    warn "  pull it with: gh release download -R $MUSIC_REPO -p briefing-music.zip && unzip -o briefing-music.zip -d briefing/assets"
   fi
   rm -f /tmp/signal-music.zip
 else
-  warn "curl/unzip not available — skipping bumper music (a generated bumper is used instead)."
+  warn "unzip not available — skipping bumper music (a generated bumper is used instead)."
 fi
 
 # ---- 4. .env (Anthropic API key) --------------------------------------------

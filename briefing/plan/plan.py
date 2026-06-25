@@ -22,8 +22,9 @@ WEATHER_SEC = 20            # shortened — weather is a quick note, not a segme
 OUTRO_SEC = 20
 LEAD_SHARE = 0.30          # the lead story gets a deeper treatment (share of the body budget)
 LEAD_MAX_FRACTION = 0.20   # ...but never more than this share of the whole episode (300s @ 25min)
-QUICKHIT_MIN_SEC = 70      # the rest are tight hits
-QUICKHIT_MAX_SEC = 160
+QUICKHIT_MIN_SEC = 70      # no story shorter than this
+STORY_TARGET_SEC = 210     # aim for ~1 story per this many seconds of body (so longer
+MIN_STORIES = 5            # episodes get more stories, not just longer ones); never fewer than this
 NUM_BIGGEST = 2            # reserve this many slots for the day's most-covered stories
 MIN_SALIENT_SOURCES = 2   # ...each needs at least this many distinct sources to qualify
 TOP_INTEREST_WEIGHT = 1.0 # interests at/above this weight are "headline focus"
@@ -102,18 +103,20 @@ def build_plan(ranked_clusters, profile, config, *, has_weather: bool, today: da
 
     fixed = sum(s.allotted_sec for s in segments) + OUTRO_SEC
     body_budget = max(target_sec - fixed, QUICKHIT_MIN_SEC)
-    body_slots = max(max_segments - len(segments) - 1, 1)
+    # scale the number of stories to the episode length (>= MIN_STORIES), capped by max_segments
+    ceiling = max(max_segments - len(segments) - 1, 1)
+    body_slots = max(min(ceiling, max(MIN_STORIES, body_budget // STORY_TARGET_SEC)), 1)
 
     selected = _select(ranked_clusters, body_slots, profile, today)
     if selected:
-        # lead story deeper; the rest are tight quick hits. Lead is capped by episode length.
+        # lead story deeper (capped by episode length); the rest split the remaining budget
+        # so the episode actually fills its target — no quick-hit longer than the lead.
         lead_sec = min(int(body_budget * LEAD_SHARE), int(target_sec * LEAD_MAX_FRACTION))
         segments.append(PlannedSegment(
             kind="headline", story_cluster_id=selected[0].id, allotted_sec=lead_sec))
         rest = selected[1:]
         if rest:
-            per = (body_budget - lead_sec) // len(rest)
-            per = max(min(per, QUICKHIT_MAX_SEC), QUICKHIT_MIN_SEC)
+            per = max(min((body_budget - lead_sec) // len(rest), lead_sec), QUICKHIT_MIN_SEC)
             for c in rest:
                 segments.append(PlannedSegment(
                     kind="headline", story_cluster_id=c.id, allotted_sec=per))

@@ -107,3 +107,12 @@ def test_lead_cap_scales_with_episode_length():
         ranked, PROFILE, {"episode": {"target_duration_minutes": 25}},
         has_weather=True, today=TODAY).segments if s.kind == "headline"]
     assert len(headlines) >= 5
+
+
+def test_plan_fills_the_target_duration():
+    # with enough stories, the allotments should nearly fill the target (not stop at ~16 min)
+    ranked = sorted(_day(), key=lambda c: c.score, reverse=True)
+    plan = build_plan(ranked, PROFILE, {"episode": {"target_duration_minutes": 25}},
+                      has_weather=True, today=TODAY)
+    total = sum(s.allotted_sec for s in plan.segments)
+    assert total >= 25 * 60 - 90        # within ~1.5 min of the 1500s target (was ~1005s before)
