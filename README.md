@@ -27,54 +27,59 @@ them automatically. Drop your own no-lyric mp3s there to personalize it.
 ## Setup
 
 ```sh
-# 1. Get the code + a virtualenv with all Python deps
+# 1. Get the code
 git clone https://github.com/acsousa/daily-briefing.git
 cd daily-briefing
-python3 -m venv .venv && .venv/bin/pip install -e ".[dev]"
 
-# 2. System audio tool
-brew install ffmpeg        # macOS
-sudo apt install ffmpeg    # Debian/Ubuntu
+# 2. One-shot install — Python venv + deps, ffmpeg, and your .env
+./install.sh               # idempotent; prompts for ffmpeg + your Anthropic API key
 
-# 3. Your Anthropic API key (gitignored)
-echo 'ANTHROPIC_API_KEY=sk-ant-...' > .env
+# 3. Activate the env (now `brief` works without a path prefix)
+source .venv/bin/activate
 
-# 4. Set your preferences (web UI → writes profile.yaml / config.yaml)
-.venv/bin/brief config     # opens http://127.0.0.1:8765
+# 4. Configure everything in the browser — name, interests, voices, show name, Spotify id
+brief config               # opens http://127.0.0.1:8765
 
-# 5. Connect Spotify so the episode lands in your feed each day
-curl -fsSL https://saveto.spotify.com/install.sh | bash   # detects your OS/arch
-save-to-spotify auth login                                # one-time browser login
-# then set spotify.show_id in config.yaml — run `save-to-spotify shows` to find it
-# Prefer another player? Skip this step and listen to the MP3 in any podcast/news app.
-
-# 6. Build today's episode
-.venv/bin/brief generate   # → briefings/briefing.txt + episode.json
+# 5. Build today's episode
+brief generate             # → briefings/briefing.txt + episode.json
 ./make_briefing.sh         # render to MP3, then publish to your show
 ```
 
-If `save-to-spotify` or the show id isn't set, `make_briefing.sh` just **skips the upload**
-and leaves you the MP3 to play wherever you like. **Scheduling** is the only optional piece
-(below).
+`./install.sh` is safe to re-run and won't clobber your `.env` or config. If you'd rather do
+it by hand, the steps it runs are right there in [`install.sh`](install.sh).
+
+### Publish to Spotify (optional)
+
+```sh
+curl -fsSL https://saveto.spotify.com/install.sh | bash   # detects your OS/arch
+save-to-spotify auth login                                # one-time browser login
+```
+
+Then put your **show id** in `brief config` (run `save-to-spotify shows` to find it). If it's
+not set, `make_briefing.sh` just **skips the upload** and leaves you the MP3 to play in any
+podcast/news app.
 
 ### Run it daily (optional)
 
 ```sh
-.venv/bin/brief schedule          # install the daily run; --uninstall to remove
+brief schedule          # install the daily run; --uninstall to remove
 ```
 
-It runs `lead_hours` before your `drop_time` (both set in `brief config`). The mechanism is
+It builds a fixed **2 hours** before your `drop_time` (set in `brief config`). The mechanism is
 chosen for your OS automatically: **launchd** on macOS, a **systemd user timer** on Linux
 (or **cron** if systemd isn't available). The machine must be on at that time.
 
 ## Configure
 
-`brief config` is the easy path. Under the hood, two gitignored files (copy from the
-committed `*.example.yaml`):
+`brief config` is the easy path — it writes two gitignored files (seeded from the committed
+`*.example.yaml`):
 
-- **`profile.yaml`** — you: interests + weights, region focus, style/tone, favor/avoid.
+- **`profile.yaml`** — you: headline focus + broader interests, region of focus, tone.
 - **`config.yaml`** — operational: source feeds, weather location, length, voices, drop
-  time, music, and the Claude models.
+  time, music, Spotify show, and the Claude models.
+
+The page covers everything; deep knobs (ranking weights, always-cover/avoid, music) live under
+its **Advanced** section.
 
 ## Commands
 
@@ -86,6 +91,9 @@ brief ingest                 # just fetch + filter + store articles
 brief schedule               # install/uninstall the daily run
 ./make_briefing.sh           # render the script to audio (+ optional publish)
 ```
+
+(Commands assume the venv is active — `source .venv/bin/activate`. Otherwise prefix with
+`.venv/bin/`.)
 
 Remote Linux server? `brief config` binds localhost; reach it over an SSH tunnel
 (`ssh -L 8765:127.0.0.1:8765 you@server`) or edit the YAML directly.
