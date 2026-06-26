@@ -11,7 +11,7 @@ renderer cuts a fresh snippet per boundary and an intro, rotating song/section b
 Without tracks it falls back to a generated synth bumper. Everything is normalized to
 44.1 kHz mono so the music keeps its high end.
 
-edge-tts and ffmpeg are invoked as subprocesses (not imported).
+edge-tts (via `python -m edge_tts`) and ffmpeg are invoked as subprocesses (not imported).
 """
 import subprocess
 import sys
@@ -170,7 +170,7 @@ def main():
                 else:
                     clips.append(turn_gap)
             raw = td / f"raw_{i:03d}.mp3"
-            run(["edge-tts", "--voice", VOICES[t["spk"]], "--rate", RATE,
+            run([sys.executable, "-m", "edge_tts", "--voice", VOICES[t["spk"]], "--rate", RATE,
                  "--text", t["text"], "--write-media", str(raw)])
             seg = td / f"turn_{i:03d}.mp3"
             run(["ffmpeg", "-y", "-i", str(raw), "-ac", "1", "-ar", SR, "-q:a", "4", str(seg)])
