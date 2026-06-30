@@ -9,14 +9,11 @@ Runs on **macOS and Linux**.
 
 ## 🎧 Hear it first
 
-Before you install anything, listen to a real episode SIGNAL generated — a 53-second cold
-open (meet the hosts, AVA and ANDREW) and the full ~21-minute briefing:
+Before you install anything, download a real episode SIGNAL generated — a 53-second cold
+open (meet the hosts, AVA and ANDREW) or the full ~21-minute briefing:
 
-| | |
-|---|---|
-| 🔊 **53-sec cold open** | [`samples/sample-coldopen.mp3`](samples/sample-coldopen.mp3?raw=1) |
-| 🎙️ **Full episode (~21 min)** | [`samples/sample-full-episode.mp3`](samples/sample-full-episode.mp3?raw=1) |
-| 📄 **Transcript** | [`samples/sample-transcript.txt`](samples/sample-transcript.txt) |
+[![Download — 53-sec cold open](https://img.shields.io/badge/⬇_Download-53--sec_cold_open-1f6feb?style=for-the-badge)](https://github.com/acsousa/daily-briefing/raw/main/samples/sample-coldopen.mp3?raw=1)
+[![Download — full episode](https://img.shields.io/badge/⬇_Download-full_~21--min_episode-2da44e?style=for-the-badge)](https://github.com/acsousa/daily-briefing/raw/main/samples/sample-full-episode.mp3?raw=1)
 
 *This sample was built for a demo listener ("Truman," in Austin) from real news on its
 generation date — your own config sets the name, interests, voices, tone, and location.*
