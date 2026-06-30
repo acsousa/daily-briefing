@@ -1,8 +1,13 @@
 """Scriptwriter: render the editor's BEATS into tight two-host news dialogue.
 
 This is a NEWS briefing first, podcast second. Each story is rendered by walking the beats
-in order — hook, headline, what happened, why it matters, bridge — so the listener actually
-gets the news. Heavy editing: fast back-and-forth, no filler affirmations.
+in order — hook, headline, what happened, why it matters — then a closing handoff, so the
+listener actually gets the news. Heavy editing: fast back-and-forth, no filler affirmations.
+
+Transitions are grounded: every segment is written knowing exactly what comes next (or that
+the show is ending), and a final editorial continuity pass (see editor.review_transitions)
+repairs any handoff that still misrepresents the running order — so the hosts never tease a
+topic that isn't actually next, or promise more when the briefing is about to end.
 
 Output is the AVA:/ANDREW: tagged format the renderer consumes; segments are separated by a
 [[SEG]] marker.
@@ -11,6 +16,7 @@ from __future__ import annotations
 
 from datetime import date
 
+from ..editor import review_transitions
 from ..store import EpisodeSegment, SourceAttribution
 
 _SYSTEM = """You write a daily two-host NEWS briefing (AVA anchors, ANDREW analyzes), in the
@@ -59,6 +65,33 @@ def _max_tokens(words: int) -> int:
     return max(int(words * 3), 1200)
 
 
+def _seg_label(seg, briefs, clusters_by_id) -> str:
+    """A short human label for what a segment is about — used to ground transitions."""
+    if seg.kind == "intro":
+        return "the opening"
+    if seg.kind == "weather":
+        return "the weather"
+    if seg.kind == "outro":
+        return "the sign-off"
+    c = clusters_by_id[seg.story_cluster_id]
+    b = briefs.get(c.id)
+    return (b.headline if b and b.headline else c.title)
+
+
+def _next_up_hint(next_seg, next_label: str | None) -> str:
+    """Describe what the current headline must hand off to (or that the show is ending)."""
+    if next_seg is None:
+        return ("NOTHING comes after this — it is the final story. Wrap toward the sign-off; "
+                "do NOT tease another story or say anything is 'coming up next'.")
+    if next_seg.kind == "outro":
+        return ("the show's sign-off — the briefing ENDS after this story. Begin to wrap; "
+                "do NOT tease another story or promise more 'after this'.")
+    if next_seg.kind == "weather":
+        return "a quick weather note. Hand off to the weather, not to another story."
+    return (f'the next story: "{next_label}". End with a brief handoff that points to THAT '
+            "story specifically — do not name or tease any other topic.")
+
+
 def write_script(llm, plan, editor_output, clusters_by_id, articles_by_id,
                  fulltext_by_id, profile, weather, today: date):
     tone = profile.get("style", {}).get("tone", "")
@@ -66,22 +99,35 @@ def write_script(llm, plan, editor_output, clusters_by_id, articles_by_id,
     briefs = {b.story_cluster_id: b for b in editor_output.segments}
     pretty_date = today.strftime("%A, %B %-d")
 
-    parts, episode_segments, briefed = [], [], []
+    # label every segment up front so each one can be written knowing what truly follows it
+    seg_labels = [_seg_label(seg, briefs, clusters_by_id) for seg in plan.segments]
+    upcoming_stories = [lab for seg, lab in zip(plan.segments, seg_labels)
+                        if seg.kind == "headline"]
+
+    rendered, briefed = [], []
     seen_headline = False
 
-    for seg in plan.segments:
+    for i, seg in enumerate(plan.segments):
         words = _words_for(seg.allotted_sec)
         mt = _max_tokens(words)
+        next_seg = plan.segments[i + 1] if i + 1 < len(plan.segments) else None
+        next_label = seg_labels[i + 1] if next_seg is not None else None
         if seg.kind == "intro":
             owner_name = ((profile.get("owner") or {}).get("name") or "").split()
             first = owner_name[0] if owner_name else ""
             welcome = (f"{first}, welcome to your daily briefing." if first
                        else "Welcome to your daily briefing.")
+            preview = "; ".join(upcoming_stories) or "today's stories"
             user = (f"Tone: {tone}\nThe opening line is already written: 'AVA: {welcome}'. "
                     f"Continue a {words}-word two-host cold open from there — do NOT greet or "
-                    "welcome again. Go straight into the day's tension, then preview what's coming "
-                    f"in a line or two. It's {pretty_date}. Through-line: "
-                    f"\"{editor_output.through_line}\". Brisk, no fabricated details. "
+                    "welcome again. Go straight into the day's tension, then briefly preview "
+                    f"what's coming. It's {pretty_date}. Through-line: "
+                    f"\"{editor_output.through_line}\".\n\n"
+                    "Today's stories, in the exact order they will air:\n"
+                    f"{preview}\n\n"
+                    "Tease only the biggest two or three of these, and only in this order. Do NOT "
+                    "mention any topic that is not in this list, and do not imply a different "
+                    "order. Brisk, no fabricated details. "
                     "Start your output with an ANDREW line (AVA just spoke the welcome).")
             body = llm.complete(_SYSTEM, user, model=model, max_tokens=mt)
             script, attrs, brk = f"AVA: {welcome}\n{body}", [], False
@@ -93,7 +139,8 @@ def write_script(llm, plan, editor_output, clusters_by_id, articles_by_id,
             script, attrs, brk = llm.complete(_SYSTEM, user, model=model, max_tokens=mt), [], False
         elif seg.kind == "outro":
             user = (f"Tone: {tone}\nWrite a short {words}-word two-host sign-off — concise, a "
-                    "touch wry, reinforcing the through-line. No new facts.")
+                    "touch wry, reinforcing the through-line. The briefing is ending: do NOT "
+                    "tease or promise any further story. No new facts.")
             script, attrs, brk = llm.complete(_SYSTEM, user, model=model, max_tokens=mt), [], True
         else:  # headline
             c = clusters_by_id[seg.story_cluster_id]
@@ -106,14 +153,15 @@ def write_script(llm, plan, editor_output, clusters_by_id, articles_by_id,
             if b:
                 beats = (f"Hook: {b.hook}\nHeadline: {b.headline}\n"
                          f"What happened (DELIVER THIS): {b.what_happened}\n"
-                         f"Why it matters: {b.why_it_matters}\nBridge: {b.bridge}\n"
+                         f"Why it matters: {b.why_it_matters}\n"
                          f"Recap (developing): {b.recap_line}\n")
             user = (
                 f"Tone: {tone}\nTarget length: ~{words} words. {depth}\n\n"
                 "Render this story by walking the beats IN ORDER — hook, then headline, then "
-                "what-happened (state the actual news and numbers), then why-it-matters, then "
-                "bridge. Fast two-host exchange, no filler lines.\n\n"
+                "what-happened (state the actual news and numbers), then why-it-matters, then a "
+                "closing handoff. Fast two-host exchange, no filler lines.\n\n"
                 f"Beats:\n{beats}\n"
+                f"What comes next: {_next_up_hint(next_seg, next_label)}\n\n"
                 f"Source material (ground every fact in this):\n"
                 f"{_sources_block(c, articles_by_id, fulltext_by_id)}\n\n"
                 "Write the segment now."
@@ -123,20 +171,34 @@ def write_script(llm, plan, editor_output, clusters_by_id, articles_by_id,
             brk = True
             briefed.append((c, (b.headline if b else c.title)))
 
-        parts.append((script.strip(), brk))
-        episode_segments.append(EpisodeSegment(
-            id=f"{plan.id}-{len(episode_segments)}",
+        rendered.append({
+            "kind": seg.kind,
+            "label": seg_labels[i],
+            "script": script.strip(),
+            "story_cluster_id": seg.story_cluster_id,
+            "attrs": attrs,
+            "brk": brk,
+        })
+
+    # editorial continuity pass: fix any handoff/preview that misrepresents the real running order
+    rendered = review_transitions(llm, rendered)
+
+    episode_segments = [
+        EpisodeSegment(
+            id=f"{plan.id}-{idx}",
             episode_id=plan.id,
-            order_index=len(episode_segments),
-            kind=seg.kind,
-            story_cluster_id=seg.story_cluster_id,
-            script=script.strip(),
-            source_attributions=attrs,
-        ))
+            order_index=idx,
+            kind=r["kind"],
+            story_cluster_id=r["story_cluster_id"],
+            script=r["script"],
+            source_attributions=r["attrs"],
+        )
+        for idx, r in enumerate(rendered)
+    ]
 
     chunks = []
-    for i, (text, brk) in enumerate(parts):
+    for i, r in enumerate(rendered):
         if i > 0:
-            chunks.append("\n[[SEG]]\n" if brk else "\n")
-        chunks.append(text)
+            chunks.append("\n[[SEG]]\n" if r["brk"] else "\n")
+        chunks.append(r["script"])
     return "".join(chunks) + "\n", episode_segments, briefed

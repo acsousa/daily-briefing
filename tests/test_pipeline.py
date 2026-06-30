@@ -4,7 +4,13 @@ from datetime import date, datetime, timezone
 
 from briefing.cluster import cluster_articles
 from briefing.continuity import match_threads, update_threads
-from briefing.editor import EditorOutput, edit_rundown
+from briefing.editor import (
+    EditorOutput,
+    TransitionEdit,
+    TransitionReview,
+    apply_transition_edits,
+    edit_rundown,
+)
 from briefing.ingest import make_article
 from briefing.ingest.weather import get_forecast
 from briefing.plan import build_plan
@@ -102,6 +108,8 @@ class _StubLLM:
     script_model = "stub"
 
     def parse(self, system, user, schema, model=None, max_tokens=16000):
+        if schema is TransitionReview:        # continuity pass — stub returns no edits
+            return TransitionReview(edits=[])
         # one beat-brief per story_cluster_id present in the prompt
         ids = [json.loads(line)["story_cluster_id"] for line in user.splitlines()
                if line.strip().startswith("{")]
@@ -141,3 +149,57 @@ def test_editor_and_script_produce_grounded_segments(tmp_path):
     update_threads(store, briefed, decisions, TODAY)
     assert len(store.list(StoryThread)) == 1       # new thread created
     store.close()
+
+
+def test_apply_transition_edits_replaces_only_exact_match():
+    segments = [
+        {"script": "AVA: First.\nANDREW: Up next, the weather."},
+        {"script": "AVA: Second.\nANDREW: That's the news."},
+    ]
+    edits = [
+        TransitionEdit(segment_index=0, original_excerpt="ANDREW: Up next, the weather.",
+                       corrected_excerpt="ANDREW: Up next, the markets."),
+        # excerpt absent from the segment -> dropped, never corrupts content
+        TransitionEdit(segment_index=1, original_excerpt="ANDREW: nonexistent line.",
+                       corrected_excerpt="ANDREW: should not apply."),
+        # out-of-range index -> ignored
+        TransitionEdit(segment_index=9, original_excerpt="x", corrected_excerpt="y"),
+    ]
+    applied = apply_transition_edits(segments, edits)
+    assert applied == 1
+    assert segments[0]["script"].endswith("Up next, the markets.")
+    assert segments[1]["script"].endswith("That's the news.")     # untouched
+
+
+def test_intro_preview_grounded_in_real_story_order(tmp_path):
+    """The intro prompt must list the actual stories, in plan order, to ground the preview."""
+    arts = [_art("a", "Nvidia AI chip", ["technology"]),
+            _art("c", "Pentagon drone contract", ["defense"], hours_ago=30)]
+    clusters = cluster_articles(arts)
+    ranked = rank_clusters(clusters, PROFILE, now=NOW)
+    config = {"episode": {"target_duration_minutes": 8}, "spotify": {"show_id": "x"}}
+    plan = build_plan(ranked, PROFILE, config, has_weather=False, today=TODAY)
+    clusters_by_id = {c.id: c for c in clusters}
+    articles_by_id = {a.id: a for a in arts}
+    decisions = match_threads(clusters, [], TODAY, {"month_days": 30})
+
+    captured = []
+
+    class _CapturingLLM(_StubLLM):
+        def complete(self, system, user, model=None, max_tokens=16000):
+            captured.append(user)
+            return super().complete(system, user, model=model, max_tokens=max_tokens)
+
+    llm = _CapturingLLM()
+    editor_output = edit_rundown(llm, plan, clusters_by_id, articles_by_id, decisions, PROFILE)
+    write_script(llm, plan, editor_output, clusters_by_id, articles_by_id, {}, PROFILE, None, TODAY)
+
+    intro_prompt = next(u for u in captured if "cold open" in u)
+    # every headline shows up in the intro's ordered story list, in plan order
+    headline_labels = ["The headline." for _ in
+                       [s for s in plan.segments if s.kind == "headline"]]
+    assert "in the exact order they will air" in intro_prompt
+    assert intro_prompt.count("The headline.") == len(headline_labels)
+    # the last headline is told the show is ending (no story to tease after it)
+    last_story_prompt = [u for u in captured if "What comes next:" in u][-1]
+    assert "ENDS after this" in last_story_prompt or "final story" in last_story_prompt
