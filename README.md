@@ -7,6 +7,20 @@ in the style of *Marketplace*, narrates it with two AI hosts over music, and pro
 
 Runs on **macOS and Linux**.
 
+## 🎧 Hear it first
+
+Before you install anything, listen to a real episode SIGNAL generated — a 53-second cold
+open (meet the hosts, AVA and ANDREW) and the full ~21-minute briefing:
+
+| | |
+|---|---|
+| 🔊 **53-sec cold open** | [`samples/sample-coldopen.mp3`](samples/sample-coldopen.mp3?raw=1) |
+| 🎙️ **Full episode (~21 min)** | [`samples/sample-full-episode.mp3`](samples/sample-full-episode.mp3?raw=1) |
+| 📄 **Transcript** | [`samples/sample-transcript.txt`](samples/sample-transcript.txt) |
+
+*This sample was built for a demo listener ("Truman," in Austin) from real news on its
+generation date — your own config sets the name, interests, voices, tone, and location.*
+
 ```
 your config → fetch real news → cluster · rank · plan → editor + scriptwriter (Claude)
    → two-host audio (edge-tts + ffmpeg, your music) → MP3 → (optional) Spotify

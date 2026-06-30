@@ -6,6 +6,11 @@
 *.ogg
 *.m4a
 
+# Exception: the committed demo episode + cold-open clip in samples/ (so people can
+# hear it before installing). Everything else audio stays ignored.
+!samples/
+!samples/*.mp3
+
 # Generated cover art
 cover.jpg
 cover.png

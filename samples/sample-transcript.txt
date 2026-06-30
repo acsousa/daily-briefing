@@ -1,0 +1,263 @@
+AVA: Truman, welcome to your daily briefing.
+ANDREW: And Truman, today is about one word: passage. Who controls it, and what happens when control slips.
+
+AVA: A tanker struck in the world's busiest oil chokepoint. An AI model regulators want kept on a leash. A fight over how long we work.
+
+ANDREW: Plus an escaped giraffe testing the limits of any fence.
+
+AVA: Let's get into it.
+AVA: Austin's got thunderstorms in the forecast today, with a high of 96.
+
+ANDREW: Low tonight of 77, and just a 1% chance of rain — so don't bank on it cooling things off.
+[[SEG]]
+AVA: A ceasefire meant to make the Strait of Hormuz safe to cross lasted exactly until a ship got hit.
+
+ANDREW: One week. The truce was signed June 17th to reopen the world's most important oil chokepoint — and by Thursday a cargo vessel was taking a projectile.
+
+AVA: Here's the headline: President Trump is accusing Iran of breaching that ceasefire after a Singapore-flagged ship was struck in the Strait, and a UN-backed evacuation of stranded sailors has been paused.
+
+ANDREW: Let's walk through what actually happened. Thursday morning, the cargo ship Ever Lovely — Singapore-flagged, owned by Evergreen — was crossing the Strait about seven and a half nautical miles southeast of Dahit, Oman.
+
+AVA: It was hit by what the British maritime agency UKMTO called "an unknown projectile." It struck the upper deck. No casualties — the crew, cargo, and vessel were all reported safe, and the ship completed its transit.
+
+ANDREW: And the timing is the story. This happened just as shipping was starting to flow again. The UN's International Maritime Organization had a plan to evacuate more than 11,000 sailors who've been stranded in the waterway for months.
+
+AVA: Before the strike, the IMO says 115 vessels and 2,500 seafarers had made it through. Then it hit pause — the IMO chief, Arsenio Dominguez, says he's not restarting until he gets safety guarantees from the US, Iran, and Oman.
+
+ANDREW: Then Friday, Trump goes on Truth Social and calls it a "foolish violation of our Ceasefire Agreement." He says Iran fired four one-way attack drones at ships, the US shot down three, and one got through.
+
+AVA: And Iran's response — Ava, what's their version?
+
+ANDREW: Tehran hasn't claimed the strike, but it hasn't denied it either. What they're asserting is control. The IRGC says the Strait is Iranian territory, and Deputy Foreign Minister Kazem Gharibabadi put it bluntly: safe passage "cannot be guaranteed" for any ship that crosses without consulting Iran.
+
+AVA: So this is really a fight over a map. The IMO and Oman drew a new southern corridor that hugs Oman's coast and partly bypasses Iranian-controlled waters. The Ever Lovely was on that exact route when it got hit.
+
+ANDREW: Iran rejected that corridor — says it was drawn without them, and that demining is still underway. So a ship took the UN's route, and that's precisely the route Iran has declared off-limits.
+
+AVA: Underneath all of this is money. The June memorandum says Iran will use its "best efforts" for safe passage with no charge for 60 days. But Iran keeps signaling it wants what it calls "maritime service fees" to cross.
+
+ANDREW: Which the US and the Gulf states flatly reject. The Gulf Cooperation Council — Saudi Arabia, the UAE, Qatar and the rest — put out a joint statement with Washington this week rejecting "any tolls, fees, or attempts to assert control over the strait."
+
+AVA: So why does a single damaged deck matter this much? Andrew.
+
+ANDREW: Because roughly a fifth of the world's oil moves through this strait. One projectile doesn't have to sink a ship to ripple outward — it spikes war-risk insurance, it nudges fuel prices, and it forces every navy in the region to recalculate.
+
+AVA: And remember how we got here. After the US and Israel struck Iran on February 28th, Tehran effectively closed the strait, oil prices jumped, and more than a dozen sailors were killed in attacks — some by American missiles, some by Iranian projectiles, most of them Indian crew.
+
+ANDREW: The ceasefire was supposed to end that. The hard truth is the deal papered over the central question — who controls this water — and just gave Iran 60 days to "assert their rights." A US official literally expected Iran to push "as aggressively as they can."
+
+AVA: So the open question is whether this was a one-off warning shot or the start of the truce unraveling. Trump notably did not threaten to end nuclear negotiations in his post.
+
+ANDREW: And 11,000 sailors are still stuck out there, waiting on guarantees that, as of Friday, nobody could give.
+
+AVA: That's a fight over who controls a waterway. Our next story is about who controls a technology.
+[[SEG]]
+AVA: The company that's spent years racing to put AI in front of everyone just agreed to slow down — because Washington asked it to.
+
+ANDREW: And it's OpenAI. On Friday the company said its newest model, the GPT-5.6 series, won't get a normal public launch. A small group of partners gets it first.
+
+AVA: Lay out the actual news, Andrew.
+
+ANDREW: OpenAI says it previewed the plans and capabilities of GPT-5.6 — three models, codenamed Sol, Terra, and Luna — for the Trump administration. The government asked the company to stagger the rollout, and OpenAI agreed.
+
+AVA: So instead of a broad release, it goes to a, quote, "small group of trusted partners" first.
+
+ANDREW: And the partner list itself was shared with the government. According to The Information, CEO Sam Altman told staff the government would be — his words — "approving access customer by customer" during the preview.
+
+AVA: That's striking. The federal government signing off on who gets a piece of software, one customer at a time.
+
+ANDREW: The reasoning is safety — specifically cybersecurity. But OpenAI offered very few specifics on what the concern actually is.
+
+AVA: Which agencies pushed for this?
+
+ANDREW: Per The Information, the Office of the National Cyber Director and the Office of Science and Technology Policy. And there's context: earlier this month Trump signed an executive order setting up a voluntary process where AI labs can hand over models up to 30 days before release for the government to test.
+
+AVA: Voluntary. The administration kept stressing that word.
+
+ANDREW: Right — but watch what's happening in practice. OpenAI says it worked closely with the government on this release. And it's not the first delay since that order. The administration also told Anthropic to pull its newest models, Fable and Mythos, over security concerns.
+
+AVA: And Anthropic complied — fast.
+
+ANDREW: Within hours. It got a federal export-control directive requiring it to block foreign nationals from using the models, and disabled them almost immediately.
+
+AVA: So why does this matter beyond the AI world? Because this is one of the clearest signs yet that Washington is willing to step into how and when frontier AI reaches the public.
+
+ANDREW: For users, developers, businesses banking on the next model — access now runs on the government's timeline, not Silicon Valley's. And OpenAI clearly doesn't love it. The company wrote that it doesn't believe "this kind of government access process should become the long-term default," that it, quote, "keeps the best tools from users, developers, enterprises, cyber defenders."
+
+AVA: But it's going along with it anyway — calling it a "short-term step."
+
+ANDREW: A short-term step toward broader availability "in the coming weeks." Altman told staff that if the limited preview goes well, a general release could follow a couple weeks later. So this isn't a kill switch — it's a gate.
+
+AVA: And the open question is who holds the keys to that gate, and for how long.
+
+ANDREW: That's the precedent. Listen to the critics. Dean Ball — a senior fellow at the Foundation for American Innovation, and a co-author of Trump's own AI Action Plan — wrote on X that in a matter of weeks, U.S. federal AI policy "has gone from implausibly libertarian to increasingly draconian and opaque."
+
+AVA: That's a co-author of the administration's own plan saying that.
+
+ANDREW: He went further — he says the executive order is "really establishing a de facto involuntary licensing" regime for frontier models. So the worry is less about this one delay and more about a White House making it up case by case.
+
+AVA: What's the actual cyber fear underneath all this?
+
+ANDREW: These frontier models are getting good at finding and exploiting software vulnerabilities faster than any human could — and some can write malware or run attacks on their own. The catch: because they stay closed to the public, it's genuinely hard to tell how dangerous they really are.
+
+AVA: OpenAI says it's working with the administration on a "repeatable process" for future releases — so this may become the template.
+
+ANDREW: Which is the thing to watch: whether "short-term step" stays short-term.
+
+AVA: From slowing down software to a much slower-moving question — how long any of us should have to work in the first place. That's next.
+[[SEG]]
+AVA: Germany is thinking about telling its workers to stay on the job until they're 70 — and here's the kicker: even that might not be enough.
+
+ANDREW: Which tells you just how brutal the math has gotten for pension systems across the wealthy world.
+
+AVA: So let's lay out what's actually on the table. Germany's government-appointed pension commission released a set of recommendations this week to shore up its retirement system.
+
+ANDREW: The headline item: gradually raising the standard retirement age to 70, with full implementation targeted for the year 2092.
+
+AVA: That's a slow phase-in. And remember, Germany's retirement age is already climbing — it's set to hit 67 by 2031.
+
+ANDREW: So this is the next step up the staircase, not a sudden jump.
+
+AVA: And the question MarketWatch raises is whether the United States could end up walking the same road.
+
+ANDREW: Because we've got our own deadline. Social Security faces insolvency within the next six years.
+
+AVA: Now here's the part people need to hear, Andrew. Even raising the retirement age to 70 doesn't fix the problem.
+
+ANDREW: Right — analysts say in Germany, the move would address only part of the funding shortfall. It's a patch, not a cure.
+
+AVA: And the same is true here. Bumping up the Social Security age would close some of the gap, but it wouldn't make the long-term financing problem go away.
+
+ANDREW: So why even do it? Because the underlying math is relentless. Populations are aging, people are living longer, and the ratio of workers paying in to retirees drawing out keeps shrinking.
+
+AVA: Fewer people holding up more people.
+
+ANDREW: Exactly the squeeze. When these systems were designed, you had a lot of workers supporting each retiree. That cushion is thinning everywhere.
+
+AVA: So spell out the menu for Americans. What are the actual options?
+
+ANDREW: There are really only three levers. You work longer — that's the retirement-age increase. You pay more — higher payroll taxes. Or you accept smaller benefits down the road.
+
+AVA: And the uncomfortable truth?
+
+ANDREW: It's probably going to be some combination of all three. There's no single painless fix hiding in the spreadsheet.
+
+AVA: Which is why Germany's debate is worth watching here. It's a preview of a conversation Americans haven't really had yet.
+
+ANDREW: And politically, none of those options is a winner. Telling people to work three more years, or pay more out of every paycheck, or take a smaller check — that's three flavors of unpopular.
+
+AVA: But the deadline doesn't care about popularity. Six years to insolvency means the choice gets made one way or another.
+
+ANDREW: And the longer you wait, the harsher each lever has to be. Smaller adjustments now, or bigger shocks later.
+
+AVA: One thing to underline for listeners: insolvency doesn't mean Social Security vanishes. It means without action, the program can't pay full scheduled benefits.
+
+ANDREW: That's the open question hanging over all of this — whether Washington moves early and gradual, like Germany's slow climb to 2092, or waits and lets the cut land all at once.
+
+AVA: For now, Germany's commission has made its recommendation. It's not law yet — these are proposals to strengthen the system.
+
+ANDREW: But it puts a marker down. Another wealthy country saying the quiet part out loud: 67 isn't going to be enough.
+
+AVA: And if you're an American in your thirties or forties, that's the number to sit with. The goalpost has been moving your whole working life.
+
+ANDREW: Work longer, pay more, or get less. Pick your discomfort — or get some of each.
+
+AVA: Speaking of expensive long-term commitments that aren't delivering what was promised...
+
+ANDREW: Consider a fighter jet now shipping without a key part. Billions spent, and the plane leaves the factory incomplete.
+
+AVA: We'll get into what's missing, and why, after the break.
+[[SEG]]
+AVA: The most expensive fighter jet ever built is now coming off the assembly line missing the one thing that lets it actually see the battlefield.
+
+ANDREW: We're talking about the F-35 — and the missing part is the radar.
+
+AVA: It's official as of this week: the U.S. military has accepted at least six F-35s for the Marine Corps with no radar installed. None.
+
+ANDREW: That confirmation came from Marine Corps Lieutenant General Gregory Masiello, who runs the F-35 Joint Program Office, at a Senate Armed Services Committee hearing.
+
+AVA: Senator Mark Kelly of Arizona — a retired naval aviator — put it to him directly. He asked if the Marines had been taking jets with no radar in them.
+
+ANDREW: And Masiello said, quote, "We have accepted six aircraft for the Marine Corps that do not have a radar installed. That is correct."
+
+AVA: Why no radar? Because the new one isn't ready. It's the next-generation AN/APG-85, and there simply aren't enough of them.
+
+ANDREW: The first production batch of that radar isn't scheduled to arrive until 2028. So these jets are being built now to accept a radar that doesn't exist yet.
+
+AVA: And the radar is just one piece of the bigger Block 4 upgrade — the whole modernization package that's supposed to keep the F-35 ahead of future threats.
+
+ANDREW: That program has been a years-long headache. Cost overruns, schedule slips. The radar delay is tangled right up in all of it.
+
+AVA: The reports out there say these radarless jets are the F-35B — the version that can do short takeoffs and vertical landings. The Marines are the only U.S. operator of that variant.
+
+ANDREW: Andrew, here's the bigger number that hung over this hearing. Two weeks ago the Government Accountability Office said the F-35's full mission capable rate — jets that can do all their missions — fell from 38 percent to 25 percent between 2020 and 2025.
+
+AVA: The program office disputes the math, says it's really 56 percent.
+
+ANDREW: But listen to how Kelly framed it. He said, fine, let's use your number — 50 percent. Which means half the fleet still can't do everything it's supposed to. And some of them don't even have radar.
+
+AVA: So why does a stealth fighter without a radar matter so much?
+
+ANDREW: Because the radar is how the jet finds targets, tracks threats, and fights at range. A stealth fighter that can't see is an extraordinarily expensive airplane that can't fully do its job — parked, or flying degraded, while taxpayers keep paying full freight.
+
+AVA: And the Pentagon says this was on purpose.
+
+ANDREW: That's the part worth sitting with. A Marine Corps spokesperson told The War Zone that the Department of War — they did this deliberately. They ran development and production at the same time, what they call a "highly concurrent" program.
+
+AVA: Meaning: keep building the jets now, on the world's largest fighter production line, so they're ready to drop the new radar in later.
+
+ANDREW: The logic being, if they'd kept building the older Block 3 jets, they'd have to rip them apart and retrofit them down the road. The spokesperson said this saves multiple years of retrofit work.
+
+AVA: But they admit the trade-off. Quote — officials made this decision, "with full understanding of the risk of having production aircraft ready ahead of the Block 4 capabilities."
+
+ANDREW: So it's a bet. Build the bodies, wait for the brains. The risk is real, and right now it's sitting on a flight line in the form of six radarless jets.
+
+AVA: When the radar does arrive, the program office says these planes will have, in their words, "unmatched capability." Initial fielding is planned for production Lot 17.
+
+ANDREW: That's the promise. The reality this week is that the flagship of American airpower is shipping incomplete — and the people signing off on it knew it.
+
+AVA: A pointed reminder that even the crown-jewel defense programs don't always show up finished.
+
+ANDREW: From a multi-million-dollar machine that can't see —
+
+AVA: — to a creature nobody could see, that turned up this morning. That story's next.
+[[SEG]]
+AVA: Nearly two weeks on the lam, and the fugitive in question was a giraffe.
+
+ANDREW: An eleven-foot, three-year-old giraffe named Gracie — not exactly built for blending in.
+
+AVA: Here's the headline: Gracie, who escaped a Texas ranch and roamed the Hill Country for almost two weeks, was found safe early Friday morning near Leakey.
+
+ANDREW: She went missing June 12 from Cedar Hollow Ranch. For nearly two weeks, nobody knew exactly where she was.
+
+AVA: Then Friday morning, Real County Sheriff Nathan Johnson announced she'd been located — about four miles south of the ranch, near Regan Wells.
+
+ANDREW: And the recovery came from the air. Ranch owner Vick Jones spotted Gracie during an aerial search, with help from pilot Jeff Hill of Concho Aviation.
+
+AVA: Once they had eyes on her, Jones called his veterinarian and pulled together a team to capture her safely and bring her home.
+
+ANDREW: The key word in all of this — unharmed. After days of searching, it ended without incident.
+
+AVA: Which, Andrew, is the whole point of this story. Eleven feet tall, loose near roads and neighbors for two weeks —
+
+ANDREW: — and nobody got hurt. Not Gracie, not a driver, not a resident. That's the part that could've gone very differently.
+
+AVA: It also became something of a local phenomenon. Businesses, organizations and residents kept posting photos and messages of support.
+
+ANDREW: People started placing Gracie next to familiar landmarks around the region — the missing giraffe became a regional mascot for about twelve days.
+
+AVA: So a small local story, but a big sigh of relief. A reminder that not every search ends in worry.
+
+ANDREW: And honestly, a rare clean ending — to cap a day full of standoffs that didn't resolve nearly so neatly.
+
+AVA: Gracie's home. We'll take it.
+[[SEG]]
+AVA: That's our briefing. The through-line today: everyone's waiting on someone else to move first.
+
+ANDREW: And while they wait, the numbers keep talking.
+
+AVA: We'll see who blinks tomorrow.
+
+ANDREW: Assuming anyone does.
+
+AVA: Thanks for listening. We'll be back to count the blinks.
