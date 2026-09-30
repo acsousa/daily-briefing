@@ -101,7 +101,11 @@ previews what's coming. Your ONLY job is to make every transition factually matc
 running order given to you. The hosts must never:
 - tease a topic as "coming up" / "next" / "after this" that is not actually what comes next,
 - promise more stories when the show is about to end,
-- refer to a story as upcoming when it has already aired.
+- refer to a story as upcoming when it has already aired,
+- sign off before the final segment. Only the final segment (the sign-off) may say goodbye,
+  thank the listener, say "that's our briefing" / "see you tomorrow" / "take care", or have
+  the hosts introduce themselves in farewell. If any earlier segment does, replace that wording
+  with a closing line on the story itself.
 
 You are given the segments in their TRUE running order. Each lists exactly what follows it.
 For every segment whose closing handoff — or, for the opening, its preview — misrepresents what
@@ -141,7 +145,8 @@ def review_transitions(llm, segments: list[dict], max_passes: int = 2) -> list[d
         )
         user = (
             "Segments in TRUE running order. Fix only transitions that misrepresent what "
-            "actually comes next (or that promise more when the show ends):\n\n"
+            "actually comes next (or that promise more when the show ends), and remove any "
+            "goodbye that appears before the final segment:\n\n"
             f"{rundown}"
         )
         try:

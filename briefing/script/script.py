@@ -84,8 +84,14 @@ def _next_up_hint(next_seg, next_label: str | None) -> str:
         return ("NOTHING comes after this — it is the final story. Wrap toward the sign-off; "
                 "do NOT tease another story or say anything is 'coming up next'.")
     if next_seg.kind == "outro":
-        return ("the show's sign-off — the briefing ENDS after this story. Begin to wrap; "
-                "do NOT tease another story or promise more 'after this'.")
+        # the separate outro owns the goodbye; saying it here too made every episode sign off
+        # twice (story goodbye → music bumper → outro goodbye)
+        return ("the show's separate sign-off segment — this is the final story. Close the "
+                "story itself with a last line of takeaway; do NOT tease another story or "
+                "promise more 'after this'. Do NOT sign off: no goodbye, no 'thanks for "
+                "listening', no 'that's our briefing', no 'see you tomorrow' or 'take care', "
+                "no hosts introducing themselves — the sign-off segment that follows is the "
+                "only place the hosts say goodbye.")
     if next_seg.kind == "weather":
         return "a quick weather note. Hand off to the weather, not to another story."
     return (f'the next story: "{next_label}". End with a brief handoff that points to THAT '
@@ -140,7 +146,9 @@ def write_script(llm, plan, editor_output, clusters_by_id, articles_by_id,
         elif seg.kind == "outro":
             user = (f"Tone: {tone}\nWrite a short {words}-word two-host sign-off — concise, a "
                     "touch wry, reinforcing the through-line. The briefing is ending: do NOT "
-                    "tease or promise any further story. No new facts.")
+                    "tease or promise any further story. No new facts. This is the ONLY goodbye "
+                    "in the episode — the last story ended without one — so sign off here, "
+                    "once.")
             script, attrs, brk = llm.complete(_SYSTEM, user, model=model, max_tokens=mt), [], True
         else:  # headline
             c = clusters_by_id[seg.story_cluster_id]

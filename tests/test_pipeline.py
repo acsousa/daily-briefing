@@ -203,3 +203,41 @@ def test_intro_preview_grounded_in_real_story_order(tmp_path):
     # the last headline is told the show is ending (no story to tease after it)
     last_story_prompt = [u for u in captured if "What comes next:" in u][-1]
     assert "ENDS after this" in last_story_prompt or "final story" in last_story_prompt
+
+
+def test_only_the_outro_signs_off(tmp_path):
+    """Regression: the last story used to say goodbye, then (after a music bumper) the outro
+    said goodbye again — 91 of 95 stored episodes. The final story must hand off without a
+    sign-off, the outro must own it, and the continuity pass must enforce it."""
+    from briefing.editor.editor import _TRANSITION_SYSTEM
+
+    arts = [_art("a", "Nvidia AI chip", ["technology"]),
+            _art("c", "Pentagon drone contract", ["defense"], hours_ago=30)]
+    clusters = cluster_articles(arts)
+    ranked = rank_clusters(clusters, PROFILE, now=NOW)
+    config = {"episode": {"target_duration_minutes": 8}, "spotify": {"show_id": "x"}}
+    plan = build_plan(ranked, PROFILE, config, has_weather=False, today=TODAY)
+    assert plan.segments[-1].kind == "outro"
+    clusters_by_id = {c.id: c for c in clusters}
+    articles_by_id = {a.id: a for a in arts}
+    decisions = match_threads(clusters, [], TODAY, {"month_days": 30})
+
+    captured = []
+
+    class _CapturingLLM(_StubLLM):
+        def complete(self, system, user, model=None, max_tokens=16000):
+            captured.append(user)
+            return super().complete(system, user, model=model, max_tokens=max_tokens)
+
+    llm = _CapturingLLM()
+    editor_output = edit_rundown(llm, plan, clusters_by_id, articles_by_id, decisions, PROFILE)
+    write_script(llm, plan, editor_output, clusters_by_id, articles_by_id, {}, PROFILE, None, TODAY)
+
+    story_prompts = [u for u in captured if "What comes next:" in u]
+    last_story, earlier = story_prompts[-1], story_prompts[:-1]
+    assert "Do NOT sign off" in last_story and "goodbye" in last_story
+    assert "Begin to wrap" not in last_story            # the old wording that invited a goodbye
+    assert all("Do NOT sign off" not in u for u in earlier)
+    outro = next(u for u in captured if "sign-off" in u and "What comes next:" not in u)
+    assert "ONLY goodbye" in outro
+    assert "goodbye" in _TRANSITION_SYSTEM and "final segment" in _TRANSITION_SYSTEM
