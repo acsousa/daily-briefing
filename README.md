@@ -83,6 +83,11 @@ shows` on any machine where you've run `auth login` with the same Spotify accoun
 is stored per-machine at `~/.config/save-to-spotify/token.json`). Leave the field blank to skip
 publishing — `make_briefing.sh` then just leaves you the MP3 to play in any podcast/news app.
 
+Spotify holds at most **60 episodes per show** and refuses new uploads past that. Before each
+upload the oldest episodes are deleted so the show stays at `spotify.max_episodes` (default
+55) — change it in `config.yaml`. Preview what would be deleted with
+`python -m briefing.publish --sts "$(command -v save-to-spotify)" --show-id <id> prune --dry-run`.
+
 ### Running on a remote server (SSH only)
 
 No desktop on the box? The config page and the Spotify login both use a browser, so forward

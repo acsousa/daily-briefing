@@ -79,10 +79,14 @@ if [ "$EP_DATE" != "$DATE" ] && [ "${BRIEF_ALLOW_STALE:-0}" != "1" ]; then
 fi
 
 echo ">> Uploading to Spotify"
-RESULT=$("$STS" --json upload "$OUT" \
+# briefing.publish prunes the oldest episodes to stay under spotify.max_episodes (default 55;
+# Spotify refuses uploads at 60), then uploads. Progress/errors go to stderr (this log).
+if ! RESULT=$("$PY" -m briefing.publish --sts "$STS" --show-id "$SHOW_ID" upload "$OUT" \
   --title "$TITLE — $PRETTY_DATE" \
-  --summary "Your daily news briefing: top stories, markets, and the day ahead." \
-  --show-id "$SHOW_ID")
+  --summary "Your daily news briefing: top stories, markets, and the day ahead."); then
+  echo "!! Upload failed (see error above). Audio ready: $OUT"
+  exit 1
+fi
 echo "$RESULT"
 
 EP_URI=$(echo "$RESULT" | "$PY" -c 'import sys,json;print(json.load(sys.stdin)["episode_uri"])')

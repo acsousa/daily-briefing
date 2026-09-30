@@ -375,6 +375,7 @@ FORM_FIELDS = {
 RAW_ONLY = {
     "owner.location.timezone", "limits.max_segments",
     "schedule.lead_hours",                          # fixed build buffer, not exposed in the form
+    "spotify.max_episodes",                         # episode cap; oldest pruned before upload
     "ingest.window_hours", "weather.provider",
     "continuity.recent_days", "continuity.week_days", "continuity.month_days",
     "ranking.weights.freshness", "ranking.weights.importance", "ranking.weights.interest",

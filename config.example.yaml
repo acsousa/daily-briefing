@@ -60,6 +60,7 @@ weather:
 spotify:
   show_id: "spotify:show:REPLACE_ME"
   show_name: ""        # podcast show name; blank = auto "<First>'s Daily Briefing"
+  max_episodes: 55     # oldest episodes are deleted before upload to stay at/below this (Spotify caps at 60)
 
 episode:
   target_duration_minutes: 20
